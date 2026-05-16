@@ -755,22 +755,69 @@ body {
 }
 .login-btn:hover { background: var(--blue-dark); }
 
+/* ── HAMBURGER BUTTON (desktop: nascosto) ── */
+.hamburger-btn {
+  display: none;
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  width: 38px; height: 38px; font-size: 20px; cursor: pointer;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  color: var(--text);
+}
+/* ── MOBILE MENU PANEL ── */
+.mobile-menu-panel {
+  display: none;
+  position: fixed; left: 0; right: 0; z-index: 1500;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 28px rgba(0,0,0,.14);
+  flex-direction: column; padding: 6px 0;
+}
+.mobile-menu-panel.open { display: flex; }
+.mob-btn {
+  padding: 15px 20px; font-size: 15px; font-weight: 600;
+  text-align: left; background: none; border: none;
+  border-bottom: 1px solid #f1f5f9; cursor: pointer; color: var(--text);
+  width: 100%;
+}
+.mob-btn:last-child { border-bottom: none; }
+.mob-btn:active { background: #f0f4ff; }
+.mob-sep { height: 6px; background: var(--bg); }
+.mob-btn.danger { color: #dc2626; }
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 700px) {
-  .app-header { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
-  .app-brand  { flex-shrink: 0; }
-  .view-tabs  { order: 10; width: 100%; justify-content: center; }
-  .view-tab   { flex: 1; font-size: 12px; padding: 6px 4px; }
-  #hdrSale, #hdrMensile { order: 11; width: 100%; flex-wrap: wrap; gap: 6px; }
-  .hdr-actions { flex-wrap: wrap; gap: 4px; }
-  .sep { display: none !important; }
-  .week-label { font-size: 12px; }
-  .app-content { padding: 10px 6px; }
-  .schedule-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .app-header {
+    height: auto; flex-wrap: wrap;
+    padding: 10px 12px; gap: 8px;
+  }
+  .app-brand { flex: 1; min-width: 0; }
+  .hamburger-btn { display: flex; }
+  /* nasconde tutto tranne brand e hamburger nella riga principale */
+  .app-header > .sep,
+  .app-header > .view-tabs,
+  #hdrSale, #hdrMensile, #logoutBtn { display: none !important; }
+  /* tabs in seconda riga */
+  .view-tabs {
+    display: flex !important; order: 10;
+    width: 100%; margin: 0 -12px;
+    width: calc(100% + 24px);
+    border-top: 1px solid var(--border);
+  }
+  .view-tab { flex: 1; border-radius: 0; font-size: 13px; padding: 10px 4px; }
+  /* navigazione settimana/mese in terza riga */
+  .mob-weeknav {
+    display: flex; order: 11; width: 100%;
+    align-items: center; justify-content: center; gap: 8px;
+  }
+  .week-label { font-size: 13px; }
+  .main { padding: 10px 6px; }
+  .sched-card { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
   #monthlyGridWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .btn-sm { font-size: 11px; padding: 5px 8px; }
   .modal { margin: 8px; width: calc(100vw - 16px) !important; max-width: none !important; }
   .login-card { padding: 28px 20px; }
+  /* celle griglia più alte per le dita */
+  .day-cell, .afternoon-cell { min-height: 60px; }
 }
 </style>
 </head>
@@ -833,7 +880,42 @@ body {
   <div id="logoutBtn" class="no-print" style="display:none;margin-left:auto">
     <button class="btn btn-secondary btn-sm" onclick="doLogout()" title="Esci">&#x2192; Esci</button>
   </div>
+  <!-- hamburger solo mobile -->
+  <button class="hamburger-btn no-print" onclick="toggleMobileMenu()" title="Menu">&#9776;</button>
+  <!-- navigazione week/mese mobile (terza riga) -->
+  <div class="mob-weeknav no-print" id="mobWeekNav" style="display:none">
+    <button class="nav-btn" id="mobPrev" onclick="">&#8592;</button>
+    <button class="today-btn" id="mobToday" onclick="">Oggi</button>
+    <span class="week-label" id="mobLabel"></span>
+    <button class="nav-btn" id="mobNext" onclick="">&#8594;</button>
+  </div>
 </header>
+
+<!-- ════ MOBILE MENU PANEL ════ -->
+<div class="mobile-menu-panel no-print" id="mobileMenuPanel">
+  <!-- Sale Operatorie -->
+  <div id="mobSaleActions">
+    <button class="mob-btn" onclick="closeMobileMenu();openRoomsModal()">&#127973; Tipi Sala</button>
+    <button class="mob-btn" onclick="closeMobileMenu();openDoctorsModal()">&#128100; Dottori</button>
+    <button class="mob-btn" onclick="closeMobileMenu();openStatsModal()">&#128200; Statistiche</button>
+    <button class="mob-btn" onclick="closeMobileMenu();copyPrevWeek()">&#8647; Copia sett. precedente</button>
+    <div class="mob-sep"></div>
+    <button class="mob-btn" onclick="closeMobileMenu();exportJPG()">&#128444; Esporta JPG</button>
+    <button class="mob-btn" onclick="closeMobileMenu();exportPDF()">&#128196; Esporta PDF</button>
+    <button class="mob-btn" onclick="closeMobileMenu();exportJSON()">&#128190; Esporta JSON</button>
+    <button class="mob-btn" onclick="closeMobileMenu();importJSON()">&#128229; Importa JSON</button>
+  </div>
+  <!-- Orario Mensile -->
+  <div id="mobMensileActions" style="display:none">
+    <button class="mob-btn" onclick="closeMobileMenu();openShiftTypesModal()">&#128197; Tipi Turno</button>
+    <button class="mob-btn" onclick="closeMobileMenu();openMonthlyReport()">&#128202; Report mensile</button>
+    <div class="mob-sep"></div>
+    <button class="mob-btn" onclick="closeMobileMenu();exportJSON()">&#128190; Esporta JSON</button>
+    <button class="mob-btn" onclick="closeMobileMenu();importJSON()">&#128229; Importa JSON</button>
+  </div>
+  <div class="mob-sep"></div>
+  <button class="mob-btn danger" id="mobLogoutBtn" style="display:none" onclick="closeMobileMenu();doLogout()">&#x2192; Esci</button>
+</div>
 
 <!-- ════════════════════ LOGIN OVERLAY ════════════════════ -->
 <div class="login-overlay" id="loginOverlay" style="display:none">
@@ -1487,6 +1569,7 @@ function weekLabel() {
 function render() {
   document.getElementById('weekLabel').textContent = weekLabel();
   renderGrid();
+  syncMobileNav();
 }
 
 function renderGrid() {
@@ -2174,6 +2257,43 @@ function exportJPG() {
 /* ══════════════════════════════════════════
    VIEW SWITCHING
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   MOBILE MENU
+══════════════════════════════════════════ */
+function toggleMobileMenu() {
+  const panel = document.getElementById('mobileMenuPanel');
+  if (!panel.classList.contains('open')) {
+    const hdr = document.querySelector('.app-header');
+    panel.style.top = hdr.getBoundingClientRect().bottom + 'px';
+  }
+  panel.classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenuPanel').classList.remove('open');
+}
+function syncMobileNav() {
+  const isSale  = currentView === 'sale';
+  const nav     = document.getElementById('mobWeekNav');
+  const isMob   = window.innerWidth <= 700;
+  nav.style.display = isMob ? 'flex' : 'none';
+  document.getElementById('mobPrev').onclick  = isSale ? prevWeek  : prevMonth;
+  document.getElementById('mobNext').onclick  = isSale ? nextWeek  : nextMonth;
+  document.getElementById('mobToday').style.display = isSale ? '' : 'none';
+  document.getElementById('mobToday').onclick = goToday;
+  document.getElementById('mobLabel').textContent  = isSale
+    ? document.getElementById('weekLabel').textContent
+    : document.getElementById('monthLabel').textContent;
+  document.getElementById('mobSaleActions').style.display    = isSale ? '' : 'none';
+  document.getElementById('mobMensileActions').style.display = isSale ? 'none' : '';
+  if (IS_SERVER) document.getElementById('mobLogoutBtn').style.display = '';
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('mobileMenuPanel');
+  const btn   = document.querySelector('.hamburger-btn');
+  if (panel?.classList.contains('open') && !panel.contains(e.target) && !btn?.contains(e.target))
+    closeMobileMenu();
+});
+
 function switchView(v) {
   currentView = v;
   document.getElementById('viewSale').style.display    = v === 'sale'    ? '' : 'none';
@@ -2183,6 +2303,7 @@ function switchView(v) {
   document.getElementById('tabSale').classList.toggle('active',    v === 'sale');
   document.getElementById('tabMensile').classList.toggle('active', v === 'mensile');
   if (v === 'mensile') renderMonthly();
+  syncMobileNav();
 }
 
 /* ══════════════════════════════════════════
@@ -2194,8 +2315,8 @@ const DAYS_SHORT = ['D','L','M','M','G','V','S'];
 
 function monthKey()   { return curMonth.toISOString().slice(0,7); }
 function monthLabel() { return `${MONTHS_IT[curMonth.getMonth()]} ${curMonth.getFullYear()}`; }
-function prevMonth()  { curMonth.setMonth(curMonth.getMonth()-1); renderMonthly(); }
-function nextMonth()  { curMonth.setMonth(curMonth.getMonth()+1); renderMonthly(); }
+function prevMonth()  { curMonth.setMonth(curMonth.getMonth()-1); renderMonthly(); syncMobileNav(); }
+function nextMonth()  { curMonth.setMonth(curMonth.getMonth()+1); renderMonthly(); syncMobileNav(); }
 
 function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
 
