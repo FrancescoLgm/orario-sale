@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orario Sale Operatorie</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a73e8'/><rect x='40' y='14' width='20' height='72' rx='7' fill='white'/><rect x='14' y='40' width='72' height='20' rx='7' fill='white'/></svg>">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -755,6 +756,11 @@ body {
 }
 .login-btn:hover { background: var(--blue-dark); }
 
+/* ── MOBILE NAV (nascosta su desktop) ── */
+.mob-weeknav { display: none; }
+/* etichetta breve (mobile) nascosta su desktop */
+.lbl-short { display: none; }
+
 /* ── HAMBURGER BUTTON (desktop: nascosto) ── */
 .hamburger-btn {
   display: none;
@@ -810,14 +816,41 @@ body {
     align-items: center; justify-content: center; gap: 8px;
   }
   .week-label { font-size: 13px; }
-  .main { padding: 10px 6px; }
-  .sched-card { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+  /* layout verticale a tutta altezza */
+  html, body    { height: 100%; }
+  body          { display: flex; flex-direction: column; }
+  .main         { flex: 1; min-height: 0; padding: 4px; display: flex; flex-direction: column; }
+  #viewSale     { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .sched-card   { flex: 1; min-height: 0; min-width: 0 !important; border-radius: 8px; display: flex; flex-direction: column; }
+  /* griglia: colonne strette, righe che riempiono l'altezza */
+  .sched-grid   {
+    flex: 1; min-height: 0;
+    grid-template-columns: 26px repeat(5, 1fr);
+    grid-template-rows: 36px 20px 1fr 1fr 1fr 1fr 1fr 20px 1fr;
+  }
+  .row-lbl      { padding: 2px; justify-content: center; font-size: 10px; }
+  .lbl-full     { display: none; }
+  .lbl-short    { display: inline; }
+  .col-hdr      { padding: 5px 2px; }
+  .day-name     { font-size: 11px; }
+  .day-date     { font-size: 9px; }
+  .sec-banner   { padding: 3px 8px; font-size: 8px; }
+  /* celle: sfruttano l'altezza disponibile */
+  .cell         { min-height: 0; padding: 4px 3px; gap: 3px; overflow: hidden; }
+  .badge        { font-size: 10px; padding: 2px 5px; }
+  .badge-dot    { width: 5px; height: 5px; }
+  .cell-doc     { font-size: 10px; }
+  .cell-doc-none { font-size: 9px; }
+  .cell-time    { font-size: 8px; }
+  .cell-hint    { font-size: 10px; }
+  .cell-doc-row { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .cell-doc-row .cell-doc { font-size: 10px; }
+  .cell-doc-row .cell-time { font-size: 8px; padding: 0; }
+  /* griglia mensile scrollabile */
   #monthlyGridWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .btn-sm { font-size: 11px; padding: 5px 8px; }
-  .modal { margin: 8px; width: calc(100vw - 16px) !important; max-width: none !important; }
+  .modal  { margin: 8px; width: calc(100vw - 16px) !important; max-width: none !important; }
   .login-card { padding: 28px 20px; }
-  /* celle griglia più alte per le dita */
-  .day-cell, .afternoon-cell { min-height: 60px; }
 }
 </style>
 </head>
@@ -826,7 +859,7 @@ body {
 <!-- ════════════════════ HEADER ════════════════════ -->
 <header class="app-header">
   <div class="app-brand">
-    <div class="brand-icon">&#9749;</div>
+    <div class="brand-icon">&#129658;</div>
     <div>
       <div class="brand-title">Gestione Turni</div>
       <div class="brand-sub">Ospedale</div>
@@ -883,7 +916,7 @@ body {
   <!-- hamburger solo mobile -->
   <button class="hamburger-btn no-print" onclick="toggleMobileMenu()" title="Menu">&#9776;</button>
   <!-- navigazione week/mese mobile (terza riga) -->
-  <div class="mob-weeknav no-print" id="mobWeekNav" style="display:none">
+  <div class="mob-weeknav no-print" id="mobWeekNav">
     <button class="nav-btn" id="mobPrev" onclick="">&#8592;</button>
     <button class="today-btn" id="mobToday" onclick="">Oggi</button>
     <span class="week-label" id="mobLabel"></span>
@@ -920,7 +953,7 @@ body {
 <!-- ════════════════════ LOGIN OVERLAY ════════════════════ -->
 <div class="login-overlay" id="loginOverlay" style="display:none">
   <div class="login-card">
-    <div class="login-icon">&#9749;</div>
+    <div class="login-icon">&#129658;</div>
     <div class="login-title">Gestione Turni</div>
     <div class="login-sub">Ospedale</div>
     <input class="inp" id="loginUser" type="text"     placeholder="Utente"   autocomplete="username"
@@ -1589,13 +1622,13 @@ function renderGrid() {
   // ── MATTINA
   h += `<div class="sec-banner am"><strong>MATTINA</strong></div>`;
   for (let s=1;s<=5;s++) {
-    h += `<div class="row-lbl">Sala ${s}</div>`;
+    h += `<div class="row-lbl"><span class="lbl-full">Sala ${s}</span><span class="lbl-short">${s}</span></div>`;
     for (let d=0;d<5;d++) h += morningCell(d,'m'+s);
   }
 
   // ── POMERIGGIO
   h += `<div class="sec-banner pm"><strong>POMERIGGIO</strong><span style="font-weight:400;font-size:10px">medico di turno</span></div>`;
-  h += `<div class="row-lbl" style="color:#7c3aed">Turno</div>`;
+  h += `<div class="row-lbl" style="color:#7c3aed"><span class="lbl-full">Turno</span><span class="lbl-short">GA</span></div>`;
   for (let d=0;d<5;d++) h += afternoonCell(d);
 
   g.innerHTML = h;
@@ -2272,15 +2305,12 @@ function closeMobileMenu() {
   document.getElementById('mobileMenuPanel').classList.remove('open');
 }
 function syncMobileNav() {
-  const isSale  = currentView === 'sale';
-  const nav     = document.getElementById('mobWeekNav');
-  const isMob   = window.innerWidth <= 700;
-  nav.style.display = isMob ? 'flex' : 'none';
+  const isSale = currentView === 'sale';
   document.getElementById('mobPrev').onclick  = isSale ? prevWeek  : prevMonth;
   document.getElementById('mobNext').onclick  = isSale ? nextWeek  : nextMonth;
   document.getElementById('mobToday').style.display = isSale ? '' : 'none';
   document.getElementById('mobToday').onclick = goToday;
-  document.getElementById('mobLabel').textContent  = isSale
+  document.getElementById('mobLabel').textContent = isSale
     ? document.getElementById('weekLabel').textContent
     : document.getElementById('monthLabel').textContent;
   document.getElementById('mobSaleActions').style.display    = isSale ? '' : 'none';
