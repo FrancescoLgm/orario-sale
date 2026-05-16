@@ -2391,7 +2391,8 @@ function renderMonthly() {
   }
   html += '<th style="background:#f0fdf4;min-width:64px">Totale</th></tr></thead><tbody>';
 
-  S.doctors.forEach(doc => {
+  const sortedDoctors = [...S.doctors].sort((a, b) => a.name.localeCompare(b.name, 'it'));
+  sortedDoctors.forEach(doc => {
     html += `<tr><td class="doc-col" onclick="openDoctorMonth('${doc.id}')" title="Visualizza mese completo">${doc.name}</td>`;
     let totShifts = 0, totRS = 0, totRT = 0;
 
