@@ -1,0 +1,2681 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orario Sale Operatorie</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #1a73e8;
+  --blue-dark: #1558b0;
+  --blue-light: #e8f0fe;
+  --surface: #ffffff;
+  --bg: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --r: 10px;
+  --r-sm: 6px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: var(--shadow);
+}
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+.brand-icon {
+  width: 34px; height: 34px;
+  background: var(--blue);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+.brand-sub {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.sep { width: 1px; height: 30px; background: var(--border); flex-shrink: 0; }
+.week-nav {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; justify-content: center;
+}
+.nav-btn {
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: white;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  color: var(--text);
+  transition: all .15s;
+}
+.nav-btn:hover { background: var(--bg); border-color: var(--blue); }
+.week-label {
+  font-size: 14px; font-weight: 600;
+  min-width: 220px; text-align: center;
+}
+.today-btn {
+  padding: 4px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: white;
+  cursor: pointer;
+  font-size: 12px; font-weight: 600;
+  color: var(--text);
+  transition: all .15s;
+}
+.today-btn:hover { background: var(--bg); }
+.hdr-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 7px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-secondary { background: white; color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--bg); }
+.btn-ghost { background: transparent; color: var(--muted); border-color: transparent; }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-danger { background: #ef4444; color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-xs { padding: 3px 8px; font-size: 11px; }
+.btn-block { width: 100%; justify-content: center; margin-bottom: 16px; }
+
+/* ── MAIN ── */
+.main { padding: 20px; overflow-x: auto; }
+
+/* ── SCHEDULE CARD ── */
+.sched-card {
+  background: white;
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  min-width: 820px;
+}
+
+.sched-grid {
+  display: grid;
+  grid-template-columns: 96px repeat(5, 1fr);
+}
+
+/* Column headers */
+.col-hdr {
+  padding: 10px 6px;
+  text-align: center;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.col-hdr:last-child { border-right: none; }
+.col-hdr.corner { background: #f8fafc; }
+.col-hdr.day { background: white; }
+.col-hdr.today { background: var(--blue-light); }
+.day-name { font-size: 13px; font-weight: 700; }
+.day-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.col-hdr.today .day-name { color: var(--blue); }
+
+/* Section banners */
+.sec-banner {
+  grid-column: 1 / -1;
+  padding: 5px 14px;
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-banner.am { background: #f0f9ff; color: #0369a1; border-top: 2px solid #bae6fd; }
+.sec-banner.pm { background: #faf5ff; color: #7c3aed; border-top: 2px solid #ddd6fe; }
+
+/* Row label */
+.row-lbl {
+  padding: 6px 10px;
+  display: flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  color: var(--muted);
+  background: #fafbfc;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Schedule cells */
+.cell {
+  min-height: 66px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  padding: 5px 6px;
+  display: flex; flex-direction: column; gap: 4px;
+  transition: background .12s;
+  position: relative;
+}
+.cell:last-child { border-right: none; }
+.cell:hover { background: #f0f4ff; }
+.cell.pm-cell {
+  min-height: 52px;
+  background: #fefcf8;
+}
+.cell.pm-cell:hover { background: #fef9ec; }
+
+.cell-hint {
+  margin: auto;
+  font-size: 11px;
+  color: #c0c8d4;
+  text-align: center;
+  user-select: none;
+}
+.cell-hint-pm {
+  font-size: 10px;
+  color: #c4b5fd;
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px; font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%; flex-shrink: 0;
+}
+.cell-doc {
+  font-size: 12px; font-weight: 500;
+  color: var(--text);
+  padding: 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-doc.pm {
+  font-size: 13px; font-weight: 700;
+  color: #6d28d9;
+}
+.cell-doc-none {
+  font-size: 11px;
+  color: #c0c8d4;
+  font-style: italic;
+  padding: 0 2px;
+}
+
+/* ── MODALS ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: white;
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 480px;
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: scale(.97) translateY(6px);
+  transition: transform .18s;
+}
+.overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-wide { max-width: 580px; }
+.modal-hdr {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: white; z-index: 1;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.close-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--muted);
+  width: 28px; height: 28px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.close-btn:hover { background: var(--bg); color: var(--text); }
+.modal-body { padding: 18px 22px; }
+.modal-foot {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+/* ── FORMS ── */
+.fg { margin-bottom: 14px; }
+.fg:last-child { margin-bottom: 0; }
+.lbl {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 5px;
+}
+.lbl-note { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; color: #94a3b8; }
+.inp {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s;
+  background: white;
+  color: var(--text);
+}
+.inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
+
+/* Sala type selector grid */
+.sala-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+}
+.sala-opt {
+  padding: 7px 9px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700;
+  transition: all .12s;
+}
+.sala-opt:hover { border-color: #9ca3af; }
+.sala-opt.sel { box-shadow: 0 0 0 1px currentColor; }
+.sala-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Doctor search list */
+.doc-list {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  max-height: 210px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.doc-item {
+  padding: 8px 11px;
+  cursor: pointer;
+  display: flex; align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background .1s;
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-item:hover { background: var(--blue-light); }
+.doc-item.sel { background: var(--blue-light); }
+.doc-name { flex: 1; font-size: 13px; font-weight: 500; }
+.count-pill {
+  font-size: 10px; font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.count-pill.low { background: #dcfce7; color: #15803d; }
+.count-pill.high { background: #fee2e2; color: #991b1b; }
+
+/* Color swatches */
+.color-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.swatch {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform .1s;
+}
+.swatch:hover { transform: scale(1.18); }
+.swatch.sel { border-color: #1e293b; }
+
+/* List items */
+.list-items { display: flex; flex-direction: column; gap: 5px; }
+.li {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: white;
+}
+.li-name { flex: 1; font-size: 13px; font-weight: 500; }
+.li-meta { font-size: 11px; color: var(--muted); }
+.li-actions { display: flex; gap: 4px; }
+.dot-lg { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Stats */
+.stats-row-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: white;
+  margin-bottom: 5px;
+}
+.stats-name { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot-bars { display: flex; gap: 5px; align-items: flex-end; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bar-lbl { font-size: 9px; color: var(--muted); }
+.bar {
+  width: 20px;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: white;
+  transition: height .3s;
+}
+.stats-total-wrap { text-align: right; min-width: 48px; }
+.stats-total-num { font-size: 16px; font-weight: 800; }
+.stats-total-lbl { font-size: 10px; color: var(--muted); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  background: #1e293b;
+  color: white;
+  padding: 11px 18px;
+  border-radius: var(--r);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 900;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all .25s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* Section divider in management modals */
+.section-sep {
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: 14px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── TIME CHIP IN CELL ── */
+.cell-time {
+  font-size: 10px;
+  color: var(--muted);
+  padding: 0 2px;
+  display: flex; align-items: center; gap: 2px;
+}
+.cell-time.alt {
+  color: #7c3aed;
+  font-weight: 700;
+}
+.cell-doc-row {
+  display: flex; align-items: center; gap: 3px;
+  min-width: 0; padding: 0 2px;
+}
+.cell-doc-row .cell-doc { flex: 1; min-width: 0; font-size: 11px; }
+.cell-doc-row .cell-time { flex-shrink: 0; }
+
+/* Assignment blocks in modal */
+.assign-block {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #fafbfc;
+}
+.assign-block-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.assign-block-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* Preset time buttons */
+.time-presets { display: flex; gap: 5px; margin-bottom: 6px; }
+.time-preset-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 11px; font-weight: 600;
+  color: var(--text);
+  transition: all .12s;
+}
+.time-preset-btn:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.time-preset-btn.active { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+
+/* ── EDIT MODE ── */
+.btn-warning { background: #f59e0b; color: white; }
+.btn-warning:hover { background: #d97706; }
+.edit-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: var(--r-sm);
+  padding: 7px 11px;
+  font-size: 12px; font-weight: 600;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+.edit-bar a {
+  color: var(--blue); cursor: pointer;
+  font-weight: 700; text-decoration: none; margin-left: 10px;
+}
+.edit-bar a:hover { text-decoration: underline; }
+
+/* ── PRINT ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .app-header, .overlay, .toast, .no-print, .cell-hint { display: none !important; }
+  body { background: white !important; }
+  .main { padding: 4px !important; }
+
+  .sched-card {
+    box-shadow: none !important;
+    border: 2px solid #94a3b8 !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .sched-grid { grid-template-columns: 110px repeat(5, 1fr) !important; }
+
+  .col-hdr {
+    padding: 8px 6px !important;
+    border-bottom: 2px solid #94a3b8 !important;
+    border-right: 1px solid #94a3b8 !important;
+  }
+  .day-name { font-size: 13px !important; font-weight: 800 !important; }
+  .day-date { font-size: 11px !important; }
+
+  .sec-banner {
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+    border-bottom: 1px solid #94a3b8 !important;
+  }
+  .sec-banner.am { background: #e0f2fe !important; border-top: 3px solid #38bdf8 !important; }
+  .sec-banner.pm { background: #ede9fe !important; border-top: 3px solid #a78bfa !important; }
+
+  .row-lbl {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 6px 10px !important;
+    border-right: 2px solid #94a3b8 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+  }
+
+  .cell {
+    cursor: default !important;
+    min-height: 72px !important;
+    padding: 6px 8px !important;
+    border-right: 1px solid #94a3b8 !important;
+    border-bottom: 1px solid #94a3b8 !important;
+  }
+  .cell.pm-cell { min-height: 52px !important; }
+
+  .badge {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 3px 10px !important;
+    margin-bottom: 4px !important;
+  }
+  .badge-dot { width: 8px !important; height: 8px !important; }
+
+  .cell-doc { font-size: 13px !important; font-weight: 600 !important; }
+  .cell-doc.pm { font-size: 14px !important; }
+  .cell-doc-row { padding: 1px 2px !important; }
+  .cell-time { font-size: 11px !important; }
+
+  @page { size: A4 landscape; margin: 8mm; }
+}
+
+/* ── VIEW TABS ── */
+.view-tabs { display:flex; gap:2px; flex-shrink:0; }
+.view-tab {
+  padding:5px 14px; border:none; background:none;
+  border-radius:20px; font-size:13px; font-weight:500;
+  color:var(--muted); cursor:pointer; transition:all .15s;
+}
+.view-tab:hover { background:var(--bg); color:var(--text); }
+.view-tab.active { background:var(--blue); color:white; }
+
+/* ── MONTHLY CARD ── */
+.monthly-card {
+  background:white; border-radius:var(--r);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.monthly-grid-wrap { overflow-x:auto; max-height:calc(100vh - 130px); overflow-y:auto; }
+.monthly-table { border-collapse:collapse; min-width:max-content; width:100%; }
+.monthly-table thead th {
+  position:sticky; top:0; z-index:2;
+  background:#f8fafc; border-bottom:2px solid var(--border);
+  padding:5px 4px; font-size:10px; font-weight:700;
+  text-align:center; white-space:nowrap;
+}
+.monthly-table thead th.doc-col {
+  left:0; z-index:3; text-align:left; min-width:160px; padding-left:14px;
+}
+.monthly-table thead th.weekend { background:#fef9ec; color:#b45309; }
+.monthly-table thead th.holiday { background:#fef08a; color:#854d0e; }
+.monthly-table td {
+  border:1px solid #e8ecf0; padding:0;
+  vertical-align:middle; width:44px; height:46px; text-align:center;
+}
+.monthly-table td.doc-col {
+  position:sticky; left:0; z-index:1; background:white;
+  padding:6px 12px; font-size:12px; font-weight:600;
+  border-right:2px solid var(--border); text-align:left;
+  min-width:160px; cursor:pointer; white-space:nowrap;
+}
+.monthly-table td.doc-col:hover { background:#f0f4ff; }
+.monthly-table tr:hover td:not(.doc-col) { background:#f8faff; }
+.monthly-table td.weekend { background:#fffbeb; }
+.shift-cell {
+  cursor:pointer; padding:2px 3px; height:46px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px;
+  border-radius:2px;
+}
+.shift-cell:hover { filter: brightness(.93); }
+.shift-abbr {
+  font-size:11px; font-weight:800;
+  padding:1px 3px; letter-spacing:.3px;
+}
+.rep-row { display:flex; gap:2px; }
+.rep-dot {
+  font-size:8px; border-radius:3px;
+  padding:1px 3px; font-weight:700; line-height:1.4;
+}
+.rep-sala  { background:#fee2e2; color:#b91c1c; }
+.rep-trasp { background:#dbeafe; color:#1e40af; }
+.tot-cell  { background:#f0fdf4 !important; text-align:center; padding:4px 6px; min-width:56px; }
+
+/* ── SHIFT TYPE GRID (modal) ── */
+.shift-type-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+.shift-type-opt {
+  padding:6px 14px; border-radius:20px; border:2px solid transparent;
+  font-size:12px; font-weight:700; cursor:pointer; transition:all .12s;
+}
+.shift-type-opt.sel { border-color:var(--text) !important; box-shadow:0 0 0 2px rgba(0,0,0,.1); }
+.shift-type-opt.none-opt {
+  border:2px dashed #cbd5e1; color:var(--muted); background:white;
+}
+.shift-type-opt.none-opt.sel { border-color:#64748b !important; }
+
+/* ── CELL POPOVER ── */
+.cell-popover {
+  position: fixed;
+  z-index: 2000;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.16), 0 0 0 1px rgba(0,0,0,.07);
+  padding: 0;
+  width: max-content;
+  max-width: 340px;
+  display: none;
+  animation: popIn .1s ease;
+}
+.cell-popover.open { display: block; }
+@keyframes popIn {
+  from { opacity:0; transform:scale(.92) translateY(-3px); }
+  to   { opacity:1; transform:scale(1)   translateY(0); }
+}
+.cp-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px 7px;
+  border-bottom: 1px solid var(--border);
+}
+.cp-title { font-weight:700; font-size:12px; white-space:nowrap; }
+.cp-sub   { font-size:11px; color:var(--muted); white-space:nowrap; }
+.cp-hdr-left { display:flex; align-items:center; gap:7px; }
+.cp-close { background:none; border:none; cursor:pointer; color:var(--muted); font-size:14px; padding:0; line-height:1; flex-shrink:0; }
+.cp-close:hover { color:var(--text); }
+.cp-shifts { padding:8px 10px; display:flex; flex-wrap:wrap; gap:5px; }
+.cp-shift-pill {
+  min-width:30px; padding:5px 9px; border-radius:20px; border:2px solid transparent;
+  font-size:12px; font-weight:800; cursor:pointer; transition:all .1s;
+  text-align:center; letter-spacing:.3px;
+}
+.cp-shift-pill.sel { box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
+.cp-shift-none {
+  min-width:30px; padding:5px 9px; border-radius:20px; border:2px dashed #cbd5e1;
+  font-size:12px; font-weight:600; cursor:pointer; color:var(--muted);
+  background:white; transition:all .1s;
+}
+.cp-shift-none.sel { border-color:#64748b; border-style:solid; color:#334155; background:#f1f5f9; }
+.cp-rep {
+  padding:6px 10px 8px;
+  border-top:1px solid #f1f5f9;
+  display:flex; gap:6px;
+}
+.cp-rep-btn {
+  flex:1; padding:4px 6px; border-radius:20px; border:1.5px solid #e2e8f0;
+  font-size:10px; font-weight:800; cursor:pointer; background:white;
+  transition:all .12s; text-align:center; letter-spacing:.3px;
+}
+.cp-rep-btn.on-sala  { background:#fee2e2; color:#b91c1c; border-color:#fca5a5; }
+.cp-rep-btn.on-trasp { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+
+/* ── DOCTOR-MONTH LIST ── */
+.doc-day-row {
+  display:grid; grid-template-columns:36px 1fr auto auto;
+  align-items:center; gap:8px; padding:5px 0;
+  border-bottom:1px solid #f1f5f9;
+}
+.doc-day-label { font-size:12px; font-weight:600; color:var(--muted); }
+.doc-day-label.weekend { color:#b45309; }
+.rep-toggle {
+  padding:3px 8px; font-size:10px; font-weight:700; border-radius:10px;
+  border:1px solid #e2e8f0; cursor:pointer; background:white; transition:all .1s;
+}
+.rep-toggle.on-sala  { background:#fee2e2; color:#b91c1c; border-color:#fca5a5; }
+.rep-toggle.on-trasp { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #1a73e8 0%, #1558b0 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: white; border-radius: 20px;
+  padding: 40px 36px; width: 100%; max-width: 360px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.25);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.login-icon  { font-size: 40px; text-align: center; }
+.login-title { font-size: 22px; font-weight: 800; text-align: center; color: var(--text); }
+.login-sub   { font-size: 13px; text-align: center; color: var(--muted); margin-top: -8px; }
+.login-card .inp { font-size: 15px; padding: 12px 14px; }
+.login-err { font-size: 12px; color: #dc2626; text-align: center; min-height: 16px; }
+.login-btn {
+  background: var(--blue); color: white; border: none;
+  border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background .15s; margin-top: 4px;
+}
+.login-btn:hover { background: var(--blue-dark); }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 700px) {
+  .app-header { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+  .app-brand  { flex-shrink: 0; }
+  .view-tabs  { order: 10; width: 100%; justify-content: center; }
+  .view-tab   { flex: 1; font-size: 12px; padding: 6px 4px; }
+  #hdrSale, #hdrMensile { order: 11; width: 100%; flex-wrap: wrap; gap: 6px; }
+  .hdr-actions { flex-wrap: wrap; gap: 4px; }
+  .sep { display: none !important; }
+  .week-label { font-size: 12px; }
+  .app-content { padding: 10px 6px; }
+  .schedule-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #monthlyGridWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .btn-sm { font-size: 11px; padding: 5px 8px; }
+  .modal { margin: 8px; width: calc(100vw - 16px) !important; max-width: none !important; }
+  .login-card { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ HEADER ════════════════════ -->
+<header class="app-header">
+  <div class="app-brand">
+    <div class="brand-icon">&#9749;</div>
+    <div>
+      <div class="brand-title">Gestione Turni</div>
+      <div class="brand-sub">Ospedale</div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabSale" onclick="switchView('sale')">Sale Operatorie</button>
+    <button class="view-tab" id="tabMensile" onclick="switchView('mensile')">Orario Mensile</button>
+  </div>
+  <div class="sep"></div>
+
+  <!-- Controlli Sale Operatorie -->
+  <div id="hdrSale" style="display:flex;align-items:center;gap:10px;flex:1">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="prevWeek()" title="Settimana precedente">&#8592;</button>
+      <button class="today-btn" onclick="goToday()">Oggi</button>
+      <span class="week-label" id="weekLabel"></span>
+      <button class="nav-btn" onclick="nextWeek()" title="Settimana successiva">&#8594;</button>
+    </div>
+    <div class="sep"></div>
+    <div class="hdr-actions">
+      <button class="btn btn-secondary btn-sm" onclick="openRoomsModal()">Tipi Sala</button>
+      <button class="btn btn-secondary btn-sm" onclick="openDoctorsModal()">Dottori</button>
+      <button class="btn btn-secondary btn-sm" onclick="openStatsModal()">Statistiche</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyPrevWeek()">&#8647; Copia sett. prec.</button>
+    </div>
+    <div class="sep no-print"></div>
+    <div class="hdr-actions no-print">
+      <button class="btn btn-secondary btn-sm" id="btnJpg" onclick="exportJPG()">JPG</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportPDF()">PDF</button>
+      <div style="width:1px;background:var(--border);height:20px;margin:0 2px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="exportJSON()">Esporta JSON</button>
+      <button class="btn btn-secondary btn-sm" onclick="importJSON()">Importa JSON</button>
+    </div>
+  </div>
+
+  <!-- Controlli Orario Mensile -->
+  <div id="hdrMensile" style="display:none;align-items:center;gap:10px;flex:1">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="prevMonth()">&#8592;</button>
+      <span class="week-label" id="monthLabel"></span>
+      <button class="nav-btn" onclick="nextMonth()">&#8594;</button>
+    </div>
+    <div class="sep"></div>
+    <div class="hdr-actions">
+      <button class="btn btn-secondary btn-sm" onclick="openShiftTypesModal()">Tipi Turno</button>
+      <button class="btn btn-secondary btn-sm" onclick="openMonthlyReport()">Report mensile</button>
+    </div>
+  </div>
+  <div id="logoutBtn" class="no-print" style="display:none;margin-left:auto">
+    <button class="btn btn-secondary btn-sm" onclick="doLogout()" title="Esci">&#x2192; Esci</button>
+  </div>
+</header>
+
+<!-- ════════════════════ LOGIN OVERLAY ════════════════════ -->
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-card">
+    <div class="login-icon">&#9749;</div>
+    <div class="login-title">Gestione Turni</div>
+    <div class="login-sub">Ospedale</div>
+    <input class="inp" id="loginUser" type="text"     placeholder="Utente"   autocomplete="username"
+           onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    <input class="inp" id="loginPass" type="password" placeholder="Password" autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Accedi</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ════════════════════ MAIN ════════════════════ -->
+<main class="main">
+  <!-- Vista Sale Operatorie -->
+  <div id="viewSale">
+    <div class="sched-card">
+      <div class="sched-grid" id="schedGrid"></div>
+    </div>
+  </div>
+
+  <!-- Vista Orario Mensile -->
+  <div id="viewMensile" style="display:none">
+    <div class="monthly-card">
+      <div class="monthly-grid-wrap">
+        <div id="monthlyGridWrap"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════════════════ MODAL: ASSIGN ════════════════════ -->
+<div class="overlay" id="ovAssign">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="assignTitle">Assegna turno</div>
+        <div class="modal-sub" id="assignSub"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal('ovAssign')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div id="salaSection">
+        <div class="fg">
+          <label class="lbl">Tipo Sala</label>
+          <div class="sala-grid" id="salaOptGrid"></div>
+        </div>
+      </div>
+      <div id="assignBlocksWrap"></div>
+      <button class="btn btn-secondary btn-sm" id="addSecondBtn" onclick="addSecondAssignment()" style="width:100%;margin-top:2px;display:none">+ Secondo dottore</button>
+      <button class="btn btn-ghost btn-sm" id="addSupportBtn" onclick="addSupportAssignment()" style="width:100%;margin-top:2px;display:none;color:#7c3aed;border:1px dashed #c4b5fd">+ Dottore di supporto</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="clearSlot()">Rimuovi</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovAssign')">Annulla</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAssign()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: ROOM TYPES ════════════════════ -->
+<div class="overlay" id="ovRooms">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div><div class="modal-title">Tipi di Sala</div></div>
+      <button class="close-btn" onclick="closeModal('ovRooms')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div id="roomEditBar" class="edit-bar" style="display:none">
+        <span>Modifica: <strong id="roomEditName"></strong></span>
+        <a onclick="cancelEditRoom()">Annulla modifica</a>
+      </div>
+      <div class="fg">
+        <label class="lbl" id="roomFormLbl">Nome</label>
+        <input class="inp" type="text" id="newRoomName" placeholder="es. Ortopedia, Urologia..." onkeydown="if(event.key==='Enter')addRoom()">
+      </div>
+      <div class="fg">
+        <label class="lbl">Colore</label>
+        <div class="color-row" id="roomColorRow"></div>
+      </div>
+      <button class="btn btn-primary btn-block" id="roomAddBtn" onclick="addRoom()">+ Aggiungi tipo sala</button>
+      <div class="section-sep">Tipi esistenti</div>
+      <div class="list-items" id="roomList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovRooms')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: DOCTORS ════════════════════ -->
+<div class="overlay" id="ovDocs">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div><div class="modal-title">Gestione Dottori</div></div>
+      <button class="close-btn" onclick="closeModal('ovDocs')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="lbl">Nome dottore</label>
+        <input class="inp" type="text" id="newDocName" placeholder="es. Dr. Mario Rossi" onkeydown="if(event.key==='Enter')addDoc()">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="addDoc()">+ Aggiungi dottore</button>
+      <div class="fg" style="margin-bottom:0">
+        <label class="lbl">Cerca dottore</label>
+        <input class="inp" type="text" id="docMgmtSearch" placeholder="Filtra lista..." oninput="renderDocList()">
+      </div>
+      <div class="section-sep">Dottori registrati</div>
+      <div class="list-items" id="docMgmtList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovDocs')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: STATS ════════════════════ -->
+<div class="overlay" id="ovStats">
+  <div class="modal modal-wide">
+    <div class="modal-hdr">
+      <div><div class="modal-title">Statistiche Turni</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select class="inp" style="width:auto;padding:5px 8px;font-size:12px" id="statsFilter" onchange="renderStats()">
+          <option value="all">Tutti i turni</option>
+          <option value="am">Solo Mattina</option>
+          <option value="pm">Solo Pomeriggio</option>
+        </select>
+        <button class="close-btn" onclick="closeModal('ovStats')">&#10005;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="statsContent"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovStats')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: TIPI TURNO ════════════════════ -->
+<div class="overlay" id="ovShiftTypes">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hdr">
+      <div><div class="modal-title">Tipi Turno</div></div>
+      <button class="close-btn" onclick="closeModal('ovShiftTypes')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+        <div>
+          <label class="lbl">Nome turno</label>
+          <input class="inp" type="text" id="stName" placeholder="es. Mattina, Notte…">
+        </div>
+        <div>
+          <label class="lbl">Sigla</label>
+          <input class="inp" type="text" id="stSigla" placeholder="MA" maxlength="3" style="width:60px;text-transform:uppercase;font-weight:700;text-align:center">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Conteggio (peso nel totale mensile)</label>
+        <div style="display:flex;gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stWeight" value="1" id="stW1" checked> 1 turno
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stWeight" value="1.5" id="stW15"> 1.5 turni
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stWeight" value="2" id="stW2"> 2 turni
+          </label>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Fascia oraria nelle assegnazioni</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stCoverage" value="full" id="stCovFull" checked> Mattina + Pomeriggio
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stCoverage" value="morning" id="stCovMorn"> Solo mattina
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="stCoverage" value="afternoon" id="stCovAftn"> Solo pomeriggio
+          </label>
+        </div>
+      </div>
+      <div class="fg">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="stBlocks">
+          <span><strong>Blocca disponibilità sala</strong> <span style="color:var(--muted);font-size:12px">— il dottore non sarà selezionabile nelle assegnazioni (es. Ferie, Malattia)</span></span>
+        </label>
+      </div>
+      <div class="fg">
+        <label class="lbl">Colore</label>
+        <div class="color-row" id="stColorRow"></div>
+      </div>
+      <div id="stEditBar" class="edit-bar" style="display:none">
+        <span>Modifica: <strong id="stEditName"></strong></span>
+        <a onclick="cancelEditShiftType()">Annulla modifica</a>
+      </div>
+      <button class="btn btn-primary btn-block" id="stAddBtn" onclick="addShiftType()">+ Aggiungi tipo turno</button>
+      <div class="section-sep">Tipi esistenti</div>
+      <div class="list-items" id="stList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovShiftTypes')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ CELL POPOVER ════════════════════ -->
+<div id="cellPopover" class="cell-popover">
+  <div class="cp-hdr">
+    <div class="cp-hdr-left">
+      <span class="cp-title" id="cpTitle"></span>
+      <span class="cp-sub"   id="cpSub"></span>
+    </div>
+    <button class="cp-close" onclick="closeCellPopover()">&#10005;</button>
+  </div>
+  <div class="cp-shifts" id="cpShifts"></div>
+  <div class="cp-rep">
+    <button class="cp-rep-btn" id="cpRepSala"  onclick="toggleCellRep('sala')">RS</button>
+    <button class="cp-rep-btn" id="cpRepTrasp" onclick="toggleCellRep('trasp')">RT</button>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: MESE DOTTORE ════════════════════ -->
+<div class="overlay" id="ovDoctorMonth">
+  <div class="modal modal-wide" style="max-width:500px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="docMonthTitle">Mese dottore</div>
+        <div class="modal-sub" id="docMonthSub"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal('ovDoctorMonth')">&#10005;</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <div id="docMonthContent"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovDoctorMonth')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: REPORT MENSILE ════════════════════ -->
+<div class="overlay" id="ovMonthReport">
+  <div class="modal modal-wide">
+    <div class="modal-hdr">
+      <div><div class="modal-title" id="reportTitle">Report mensile</div></div>
+      <button class="close-btn" onclick="closeModal('ovMonthReport')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div id="reportContent"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('ovMonthReport')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ TOAST ════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONSTANTS & CONFIG
+══════════════════════════════════════════ */
+const STORE_KEY = 'orario_sale_v3';
+const DAYS = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const COLORS = ['#ef4444','#f97316','#eab308','#84cc16','#22c55e',
+                '#14b8a6','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#64748b'];
+const SLOT_LABELS = { m1:'S1', m2:'S2', m3:'S3', m4:'S4', m5:'S5', p:'PM' };
+const SLOT_COLORS = { m1:'#3b82f6', m2:'#22c55e', m3:'#f97316', m4:'#8b5cf6', m5:'#ec4899', p:'#7c3aed' };
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let S = {
+  saleTypes:       [],  // [{ id, name, color }]
+  doctors:         [],  // [{ id, name, spec }]
+  schedule:        {},  // weekly sala schedule
+  stats:           {},  // sala stats
+  shiftTypes:      [],  // [{ id, name, weight:1|2, color }]
+  monthlySchedule: {}   // { "YYYY-MM": { doctorId: { day: { shiftTypeId, repSala, repTrasporti } } } }
+};
+
+let curMonday     = getMonday(new Date());
+let aCtx            = null;   // assign context: { dayIdx, slot }
+let selSalaId       = null;
+let selColor        = COLORS[3];
+let editingRoomId   = null;
+let slotAssignments = [];     // [{ doctorId, timeStart, timeEnd }]  max 2 per slot
+
+// ── Mensile
+let currentView   = 'sale';
+let curMonth      = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let cellAssignCtx = null;   // { doctorId, day }
+let selShiftColor    = COLORS[0];
+let selShiftTypeId   = null;  // currently selected in cell modal
+let editingShiftTypeId = null;
+
+/* ══════════════════════════════════════════
+   PERSISTENCE — localStorage + Export/Import JSON
+══════════════════════════════════════════ */
+function setDefaults() {
+  if (!S.saleTypes.length) {
+    S.saleTypes = [
+      { id: uid(), name: 'Ortopedia',       color: '#3b82f6' },
+      { id: uid(), name: 'Cardiochirurgia', color: '#ef4444' },
+      { id: uid(), name: 'Neurochirurgia',  color: '#8b5cf6' },
+      { id: uid(), name: 'Urologia',        color: '#f97316' },
+      { id: uid(), name: 'Ginecologia',     color: '#ec4899' },
+      { id: uid(), name: 'Chir. Generale',  color: '#22c55e' },
+      { id: uid(), name: 'Oculistica',      color: '#06b6d4' },
+    ];
+  }
+  if (!S.shiftTypes) S.shiftTypes = [];
+  if (!S.monthlySchedule) S.monthlySchedule = {};
+}
+
+const IS_SERVER = window.location.protocol !== 'file:';
+
+let _saveTimer = null;
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(S));
+  if (!IS_SERVER) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(S)
+      });
+      if (r.status === 401) showLoginOverlay();
+    } catch(e) { /* offline — dati già in localStorage */ }
+  }, 800);
+}
+
+async function loadState() {
+  if (IS_SERVER) {
+    try {
+      const r = await fetch('/api/state');
+      if (r.status === 401) { showLoginOverlay(); return false; }
+      const data = await r.json();
+      if (data) {
+        S = { ...S, ...data };
+        localStorage.setItem(STORE_KEY, JSON.stringify(S));
+      } else {
+        // Prima esecuzione sul server: migra da localStorage se presente
+        const raw = localStorage.getItem(STORE_KEY);
+        if (raw) { S = { ...S, ...JSON.parse(raw) }; }
+      }
+    } catch(e) {
+      // Fallback localStorage (es. offline)
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) { try { S = { ...S, ...JSON.parse(raw) }; } catch(e2) {} }
+    }
+  } else {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) S = { ...S, ...JSON.parse(raw) };
+    } catch(e) {}
+  }
+  setDefaults();
+  migrateSlots();
+  rebuildStats();
+  return true;
+}
+
+/* ── Auth (usato solo in modalità server) ── */
+function showLoginOverlay() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('logoutBtn').style.display    = 'none';
+}
+function hideLoginOverlay() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('logoutBtn').style.display    = IS_SERVER ? '' : 'none';
+}
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl    = document.getElementById('loginErr');
+  errEl.textContent = '';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (r.ok) {
+      hideLoginOverlay();
+      const ok = await loadState();
+      if (ok) { setDefaults(); migrateSlots(); rebuildStats(); render(); }
+    } else {
+      errEl.textContent = 'Credenziali errate. Riprova.';
+    }
+  } catch(e) {
+    errEl.textContent = 'Errore di connessione al server.';
+  }
+}
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+  showLoginOverlay();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `orario_sale_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('File JSON esportato');
+}
+
+function importJSON() {
+  const input   = document.createElement('input');
+  input.type    = 'file';
+  input.accept  = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!parsed.saleTypes && !parsed.doctors && !parsed.schedule)
+          throw new Error('Formato non riconosciuto');
+        S = { saleTypes: [], doctors: [], schedule: {}, stats: {}, ...parsed };
+        migrateSlots();
+        rebuildStats();
+        save();
+        render();
+        toast('Dati importati correttamente');
+      } catch(err) {
+        toast('Errore: file non valido');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+/* ══════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════ */
+function uid() { return Math.random().toString(36).slice(2,9) + Date.now().toString(36); }
+
+function getMonday(d) {
+  const r = new Date(d);
+  const day = r.getDay();
+  r.setDate(r.getDate() + (day === 0 ? -6 : 1 - day));
+  r.setHours(0,0,0,0);
+  return r;
+}
+
+function dayOf(idx) {
+  const d = new Date(curMonday);
+  d.setDate(d.getDate() + idx);
+  return d;
+}
+
+function weekKey() { return curMonday.toISOString().slice(0,10); }
+
+function fmtDate(d) { return d.getDate() + '/' + (d.getMonth()+1); }
+
+function isToday(d) {
+  const n = new Date();
+  return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear();
+}
+
+function lighten(hex, a=0.82) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.round(r+(255-r)*a)},${Math.round(g+(255-g)*a)},${Math.round(b+(255-b)*a)})`;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(ov =>
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); })
+);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+});
+document.addEventListener('click', e => {
+  const pop = document.getElementById('cellPopover');
+  if (pop?.classList.contains('open') && !pop.contains(e.target)) closeCellPopover();
+});
+
+/* ══════════════════════════════════════════
+   SCHEDULE DATA ACCESS
+══════════════════════════════════════════ */
+function getSlot(dayIdx, slot) {
+  return S.schedule?.[weekKey()]?.[dayIdx]?.[slot] ?? null;
+}
+
+function setSlot(dayIdx, slot, data) {
+  if (!S.schedule[weekKey()])            S.schedule[weekKey()] = {};
+  if (!S.schedule[weekKey()][dayIdx])    S.schedule[weekKey()][dayIdx] = {};
+  if (data === null) delete S.schedule[weekKey()][dayIdx][slot];
+  else               S.schedule[weekKey()][dayIdx][slot] = data;
+}
+
+/* ══════════════════════════════════════════
+   STATS  (keyed by salaTypeId for morning, 'p' for afternoon)
+══════════════════════════════════════════ */
+function getStat(docId, key) { return S.stats[docId]?.[key] ?? 0; }
+
+function incStat(docId, slot, salaTypeId) {
+  if (!S.stats[docId]) S.stats[docId] = {};
+  const key = slot === 'p' ? 'p' : (salaTypeId || '__nosala__');
+  S.stats[docId][key] = (S.stats[docId][key] || 0) + 1;
+}
+
+function decStat(docId, slot, salaTypeId) {
+  if (!S.stats[docId]) return;
+  const key = slot === 'p' ? 'p' : (salaTypeId || '__nosala__');
+  if (S.stats[docId][key]) S.stats[docId][key] = Math.max(0, S.stats[docId][key] - 1);
+}
+
+// Migrate old single-doctor slot format → new { salaTypeId, assignments:[...] } format
+function migrateSlots() {
+  Object.values(S.schedule).forEach(week =>
+    Object.values(week).forEach(day => {
+      ['m1','m2','m3','m4','m5','p'].forEach(sk => {
+        const sl = day[sk];
+        if (!sl || sl.assignments) return;
+        day[sk] = {
+          salaTypeId: sl.salaTypeId || null,
+          assignments: sl.doctorId
+            ? [{ doctorId: sl.doctorId,
+                 timeStart: sl.timeStart || (sk === 'p' ? null : '08:00'),
+                 timeEnd:   sl.timeEnd   || (sk === 'p' ? null : '14:00') }]
+            : []
+        };
+      });
+    })
+  );
+}
+
+// Rebuild all stats from schedule (handles both old and new format)
+function rebuildStats() {
+  S.stats = {};
+  Object.values(S.schedule).forEach(week =>
+    Object.values(week).forEach(day => {
+      ['m1','m2','m3','m4','m5'].forEach(sk => {
+        const sl = day[sk];
+        if (!sl) return;
+        const stKey = sl.salaTypeId || '__nosala__';
+        const list = sl.assignments || (sl.doctorId ? [{ doctorId: sl.doctorId }] : []);
+        list.forEach(a => {
+          if (!a.doctorId) return;
+          if (!S.stats[a.doctorId]) S.stats[a.doctorId] = {};
+          S.stats[a.doctorId][stKey] = (S.stats[a.doctorId][stKey] || 0) + 1;
+        });
+      });
+      const pm = day['p'];
+      if (!pm) return;
+      const pmList = pm.assignments || (pm.doctorId ? [{ doctorId: pm.doctorId }] : []);
+      pmList.forEach(a => {
+        if (!a.doctorId) return;
+        if (!S.stats[a.doctorId]) S.stats[a.doctorId] = {};
+        S.stats[a.doctorId]['p'] = (S.stats[a.doctorId]['p'] || 0) + 1;
+      });
+    })
+  );
+}
+
+function morningTotal(docId) {
+  const s = S.stats[docId] || {};
+  return Object.entries(s).filter(([k]) => k !== 'p').reduce((sum,[,v]) => sum + v, 0);
+}
+
+function docTotals(docId) {
+  const am = morningTotal(docId);
+  const pm = S.stats[docId]?.['p'] || 0;
+  return { am, pm, tot: am + pm };
+}
+
+/* ══════════════════════════════════════════
+   WEEK NAVIGATION
+══════════════════════════════════════════ */
+function prevWeek()  { curMonday.setDate(curMonday.getDate()-7); render(); }
+function nextWeek()  { curMonday.setDate(curMonday.getDate()+7); render(); }
+function goToday()   { curMonday = getMonday(new Date()); render(); }
+
+function copyPrevWeek() {
+  const prevMonday = new Date(curMonday);
+  prevMonday.setDate(prevMonday.getDate() - 7);
+  const prevKey = prevMonday.toISOString().slice(0, 10);
+  const curKey  = weekKey();
+
+  const prevWeekData = S.schedule[prevKey];
+  if (!prevWeekData || !Object.keys(prevWeekData).length) {
+    toast('Nessun dato nella settimana precedente');
+    return;
+  }
+
+  const curWeekData = S.schedule[curKey];
+  const hasCurrentData = curWeekData && Object.values(curWeekData).some(day =>
+    Object.values(day).some(sl => sl && (sl.salaTypeId || sl.assignments?.length))
+  );
+
+  if (hasCurrentData && !confirm('Questa settimana ha già dati. Vuoi sovrascriverli con la settimana precedente?')) return;
+
+  // Copia solo le tipologie sala, non i dottori assegnati
+  const copied = {};
+  Object.entries(prevWeekData).forEach(([dayIdx, dayData]) => {
+    copied[dayIdx] = {};
+    Object.entries(dayData).forEach(([slot, slotData]) => {
+      if (slotData?.salaTypeId) copied[dayIdx][slot] = { salaTypeId: slotData.salaTypeId, assignments: [] };
+    });
+  });
+  S.schedule[curKey] = copied;
+  rebuildStats();
+  save();
+  render();
+  toast('Tipologie sala copiate dalla settimana precedente');
+}
+
+function weekLabel() {
+  const fri = new Date(curMonday); fri.setDate(fri.getDate()+4);
+  const m = curMonday, f = fri;
+  const same = m.getMonth() === f.getMonth();
+  return same
+    ? `${m.getDate()} – ${f.getDate()} ${MONTHS[m.getMonth()]} ${m.getFullYear()}`
+    : `${m.getDate()} ${MONTHS[m.getMonth()]} – ${f.getDate()} ${MONTHS[f.getMonth()]} ${m.getFullYear()}`;
+}
+
+/* ══════════════════════════════════════════
+   RENDER SCHEDULE
+══════════════════════════════════════════ */
+function render() {
+  document.getElementById('weekLabel').textContent = weekLabel();
+  renderGrid();
+}
+
+function renderGrid() {
+  const g = document.getElementById('schedGrid');
+  let h = '';
+
+  // ── Column headers
+  h += `<div class="col-hdr corner"></div>`;
+  for (let d=0;d<5;d++) {
+    const dt = dayOf(d);
+    h += `<div class="col-hdr day${isToday(dt)?' today':''}">
+      <div class="day-name">${DAYS[d]}</div>
+      <div class="day-date">${fmtDate(dt)}</div>
+    </div>`;
+  }
+
+  // ── MATTINA
+  h += `<div class="sec-banner am"><strong>MATTINA</strong></div>`;
+  for (let s=1;s<=5;s++) {
+    h += `<div class="row-lbl">Sala ${s}</div>`;
+    for (let d=0;d<5;d++) h += morningCell(d,'m'+s);
+  }
+
+  // ── POMERIGGIO
+  h += `<div class="sec-banner pm"><strong>POMERIGGIO</strong><span style="font-weight:400;font-size:10px">medico di turno</span></div>`;
+  h += `<div class="row-lbl" style="color:#7c3aed">Turno</div>`;
+  for (let d=0;d<5;d++) h += afternoonCell(d);
+
+  g.innerHTML = h;
+}
+
+function morningCell(d, slot) {
+  const data  = getSlot(d, slot);
+  const click = `openAssign(${d},'${slot}')`;
+
+  if (!data) {
+    return `<div class="cell" onclick="${click}"><div class="cell-hint">+ Assegna</div></div>`;
+  }
+
+  const sala = data.salaTypeId ? S.saleTypes.find(x => x.id === data.salaTypeId) : null;
+  const bg   = sala ? lighten(sala.color, 0.84) : '#fafbfc';
+
+  const badge = sala
+    ? `<div class="badge" style="background:${lighten(sala.color,0.7)};color:${sala.color}">
+        <div class="badge-dot" style="background:${sala.color}"></div>${sala.name}
+       </div>`
+    : `<div class="badge" style="background:#f1f5f9;color:#94a3b8"><div class="badge-dot" style="background:#cbd5e1"></div>Tipo N/D</div>`;
+
+  const rows = (data.assignments || []).map(a => {
+    const doc    = a.doctorId ? S.doctors.find(x => x.id === a.doctorId) : null;
+    const isStd  = a.timeStart === '08:00' && a.timeEnd === '14:00';
+    const timeEl = a.timeStart
+      ? `<span class="cell-time${isStd ? '' : ' alt'}">${a.timeStart}–${a.timeEnd}</span>`
+      : '';
+    if (a.support) {
+      const supName = doc ? doc.name : '';
+      return supName
+        ? `<div class="cell-doc-row" style="margin-top:3px;padding-top:3px;border-top:1px dashed #c4b5fd">
+            <span style="font-size:9px;color:#7c3aed;font-weight:600;letter-spacing:.4px">SPEC.</span>
+            <span class="cell-doc" style="color:#7c3aed">${supName}</span>
+           </div>`
+        : '';
+    }
+    const docEl  = doc
+      ? `<span class="cell-doc">${doc.name}</span>`
+      : `<span class="cell-doc-none">Nessun dottore</span>`;
+    return `<div class="cell-doc-row">${docEl}${timeEl}</div>`;
+  }).join('');
+
+  return `<div class="cell" style="background:${bg}" onclick="${click}">${badge}${rows}</div>`;
+}
+
+function afternoonCell(d) {
+  const data  = getSlot(d, 'p');
+  const click = `openAssign(${d},'p')`;
+  const docId = data?.assignments?.[0]?.doctorId;
+  const doc   = docId ? S.doctors.find(x => x.id === docId) : null;
+
+  if (!doc) {
+    return `<div class="cell pm-cell" onclick="${click}">
+      <div class="cell-hint"><div class="cell-hint-pm">+ Medico di turno</div></div>
+    </div>`;
+  }
+  return `<div class="cell pm-cell" onclick="${click}">
+    <div class="cell-doc pm">${doc.name}</div>
+    <div style="font-size:10px;color:#a78bfa;padding:0 2px">Guardia Anestesiologica</div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════
+   ASSIGN MODAL
+══════════════════════════════════════════ */
+function openAssign(dayIdx, slot) {
+  aCtx = { dayIdx, slot };
+  const existing = getSlot(dayIdx, slot);
+  const isPM = slot === 'p';
+
+  document.getElementById('assignTitle').textContent = `${DAYS[dayIdx]} ${fmtDate(dayOf(dayIdx))}`;
+  document.getElementById('assignSub').textContent   = isPM ? 'Pomeriggio – Turno' : `Mattina – Sala ${slot[1]}`;
+
+  selSalaId = existing?.salaTypeId || null;
+
+  if (!isPM) {
+    renderSalaOpts();
+    document.getElementById('salaSection').style.display = '';
+    slotAssignments = existing?.assignments?.length
+      ? existing.assignments.map(a => ({ ...a }))
+      : [{ doctorId: null, timeStart: '08:00', timeEnd: '14:00' }];
+  } else {
+    document.getElementById('salaSection').style.display = 'none';
+    slotAssignments = existing?.assignments?.length
+      ? [{ ...existing.assignments[0] }]
+      : [{ doctorId: null, timeStart: null, timeEnd: null }];
+  }
+
+  renderAssignmentBlocks();
+  openModal('ovAssign');
+  document.getElementById('ds-0')?.focus();
+}
+
+function renderSalaOpts() {
+  const g = document.getElementById('salaOptGrid');
+  if (!S.saleTypes.length) {
+    g.innerHTML = `<div class="empty-state">Nessun tipo sala. <a href="#" onclick="closeModal('ovAssign');openRoomsModal()">Aggiungine uno.</a></div>`;
+    return;
+  }
+  g.innerHTML = S.saleTypes.map(st => {
+    const isSel = selSalaId === st.id;
+    return `<div class="sala-opt${isSel?' sel':''}" style="color:${st.color};border-color:${isSel?st.color:'var(--border)'}"
+      onclick="selSala('${st.id}')">
+      <div class="sala-dot" style="background:${st.color}"></div>${st.name}
+    </div>`;
+  }).join('');
+}
+
+function selSala(id) {
+  selSalaId = id;
+  renderSalaOpts();
+  slotAssignments.forEach((_, i) => renderAssignDocList(i));
+}
+
+function renderAssignmentBlocks() {
+  const isPM = aCtx?.slot === 'p';
+  const wrap = document.getElementById('assignBlocksWrap');
+  const searches = slotAssignments.map((_, i) => document.getElementById(`ds-${i}`)?.value || '');
+
+  wrap.innerHTML = slotAssignments.map((a, i) => blockHtml(a, i, isPM)).join('');
+
+  const mainSlots = slotAssignments.filter(a => !a.support).length;
+  const hasSupport = slotAssignments.some(a => a.support);
+  const addBtn = document.getElementById('addSecondBtn');
+  if (addBtn) addBtn.style.display = (!isPM && mainSlots < 2) ? '' : 'none';
+  const supBtn = document.getElementById('addSupportBtn');
+  if (supBtn) supBtn.style.display = (!isPM && mainSlots >= 1 && !hasSupport) ? '' : 'none';
+
+  slotAssignments.forEach((_, i) => {
+    const dsEl = document.getElementById(`ds-${i}`);
+    if (dsEl && searches[i]) dsEl.value = searches[i];
+    renderAssignDocList(i);
+  });
+}
+
+function blockHtml(a, i, isPM) {
+  const mainSlots = slotAssignments.filter(x => !x.support).length;
+  const multi = mainSlots > 1 || a.support;
+  const p08_14 = a.timeStart === '08:00' && a.timeEnd === '14:00';
+  const p14_18 = a.timeStart === '14:00' && a.timeEnd === '18:00';
+  const p08_18 = a.timeStart === '08:00' && a.timeEnd === '18:00';
+
+  const timeHtml = (isPM || a.support) ? '' : `
+    <div class="fg">
+      <div class="time-presets">
+        <button class="time-preset-btn${p08_14?' active':''}" data-preset="08:00,14:00" onclick="setTimePreset(${i},'08:00','14:00')">08–14</button>
+        <button class="time-preset-btn${p14_18?' active':''}" data-preset="14:00,18:00" onclick="setTimePreset(${i},'14:00','18:00')">14–18</button>
+        <button class="time-preset-btn${p08_18?' active':''}" data-preset="08:00,18:00" onclick="setTimePreset(${i},'08:00','18:00')">08–18</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input class="inp" type="time" id="ts-${i}" value="${a.timeStart||'08:00'}" style="flex:1" oninput="onTimeInput(${i})">
+        <span style="color:var(--muted);font-size:12px;flex-shrink:0">→</span>
+        <input class="inp" type="time" id="te-${i}" value="${a.timeEnd||'14:00'}" style="flex:1" oninput="onTimeInput(${i})">
+      </div>
+    </div>`;
+
+  const mainIdx = slotAssignments.slice(0, i).filter(x => !x.support).length + 1;
+  const lbl = a.support
+    ? `<span style="color:#7c3aed">Supporto</span>`
+    : isPM ? 'Medico di turno' : (mainSlots > 1 ? `Dottore ${mainIdx}` : 'Dottore');
+  const removeBtn = (multi || a.support)
+    ? `<button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="removeAssignment(${i})">Rimuovi</button>`
+    : '';
+  const blockStyle = a.support ? 'border:1px dashed #c4b5fd;background:#faf5ff;border-radius:8px;padding:10px' : '';
+
+  return `<div class="assign-block" id="block-${i}" style="${blockStyle}">
+    <div class="assign-block-hdr">
+      <span class="assign-block-label">${lbl}</span>${removeBtn}
+    </div>
+    ${timeHtml}
+    <div class="fg" style="margin-bottom:0">
+      <label class="lbl" style="font-size:10px">Cerca <span class="lbl-note">— suggeriti per frequenza minore</span></label>
+      <input class="inp" type="text" id="ds-${i}" placeholder="Cerca per nome..." oninput="filterDocs(${i})">
+      <div class="doc-list" id="dl-${i}"></div>
+    </div>
+  </div>`;
+}
+
+function getDoctorDayShift(doctorId, date) {
+  const mk  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+  const day = date.getDate();
+  const slot = S.monthlySchedule?.[mk]?.[doctorId]?.[day];
+  if (!slot?.shiftTypeId) return null;
+  return S.shiftTypes.find(t => t.id === slot.shiftTypeId) || null;
+}
+
+function isDoctorBlocked(doctorId, date) {
+  const st = getDoctorDayShift(doctorId, date);
+  return !!st?.blocks;
+}
+
+function getUsedDoctorIds(excludeIdx) {
+  const used = new Set();
+  // other blocks within the same slot being edited
+  slotAssignments.forEach((a, i) => { if (i !== excludeIdx && a.doctorId) used.add(a.doctorId); });
+  if (!aCtx) return used;
+  const { dayIdx, slot } = aCtx;
+  const wk = S.schedule[weekKey()];
+  if (!wk) return used;
+  const dayData = wk[dayIdx];
+  if (!dayData) return used;
+  // other morning slots on the same day
+  ['m1','m2','m3','m4','m5'].forEach(sk => {
+    if (sk === slot) return;
+    const sl = dayData[sk];
+    (sl?.assignments || []).forEach(a => { if (a.doctorId) used.add(a.doctorId); });
+  });
+  return used;
+}
+
+function renderAssignDocList(idx) {
+  const search  = (document.getElementById(`ds-${idx}`)?.value || '').toLowerCase();
+  const list    = document.getElementById(`dl-${idx}`);
+  if (!list) return;
+
+  if (!S.doctors.length) { list.innerHTML = '<div class="empty-state">Nessun dottore registrato.</div>'; return; }
+
+  const isSpec  = !!slotAssignments[idx]?.support;
+  const isPM    = aCtx?.slot === 'p';
+  const statKey = isPM ? 'p' : (selSalaId || null);
+  const curDoc  = slotAssignments[idx]?.doctorId;
+  const used    = getUsedDoctorIds(idx);
+
+  // Recupera data corrente per incrocio con orario mensile
+  const currentDate = aCtx ? dayOf(aCtx.dayIdx) : null;
+
+  const slotType = (aCtx?.slot === 'p') ? 'afternoon' : 'morning';
+
+  let docs = S.doctors.filter(d => {
+    if (d.id !== curDoc && used.has(d.id)) return false;
+    if (isSpec && !d.spec) return false;
+    if (currentDate && d.id !== curDoc) {
+      const dayShift = getDoctorDayShift(d.id, currentDate);
+      if (dayShift) {
+        // turno bloccante (ferie, malattia ecc.)
+        if (dayShift.blocks) return false;
+        // turno con fascia oraria incompatibile
+        const cov = dayShift.coverage || 'full';
+        if (cov !== 'full' && cov !== slotType) return false;
+      }
+    }
+    return d.name.toLowerCase().includes(search);
+  });
+
+  if (statKey) docs.sort((a,b) => getStat(a.id, statKey) - getStat(b.id, statKey));
+  else         docs.sort((a,b) => morningTotal(a.id) - morningTotal(b.id));
+
+  const getCnt  = d => statKey ? getStat(d.id, statKey) : morningTotal(d.id);
+  const max     = Math.max(...docs.map(d => getCnt(d)), 1);
+  const tipLbl  = statKey && statKey !== 'p' ? (S.saleTypes.find(s => s.id === statKey)?.name || '') : '';
+
+  if (!docs.length) {
+    list.innerHTML = `<div class="empty-state">${isSpec ? 'Nessun dottore con flag Spec. in anagrafica.' : 'Nessun risultato.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = docs.map(d => {
+    const cnt      = getCnt(d);
+    const isSel    = curDoc === d.id;
+    const pillCls  = cnt === 0 ? 'low' : (cnt >= max && max > 1 ? 'high' : '');
+    const dayShift = currentDate ? getDoctorDayShift(d.id, currentDate) : null;
+    const shiftBadge = dayShift
+      ? `<span style="font-size:9px;background:${lighten(dayShift.color,0.82)};color:${dayShift.color};border-radius:4px;padding:1px 5px;font-weight:700;margin-right:4px">${(dayShift.sigla || dayShift.name.slice(0,2).toUpperCase())}</span>`
+      : '';
+    return `<div class="doc-item${isSel?' sel':''}" onclick="selDoc(${idx},'${d.id}')">
+      <div class="doc-name">${shiftBadge}${d.name}</div>
+      <div class="count-pill ${pillCls}" title="${tipLbl}">${cnt === 0 ? 'mai' : cnt+'x'}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterDocs(idx) { renderAssignDocList(idx); }
+
+function selDoc(idx, id) {
+  if (slotAssignments[idx]) slotAssignments[idx].doctorId = id;
+  renderAssignDocList(idx);
+}
+
+function setTimePreset(idx, start, end) {
+  if (!slotAssignments[idx]) return;
+  slotAssignments[idx].timeStart = start;
+  slotAssignments[idx].timeEnd   = end;
+  const tsEl = document.getElementById(`ts-${idx}`);
+  const teEl = document.getElementById(`te-${idx}`);
+  if (tsEl) tsEl.value = start;
+  if (teEl) teEl.value = end;
+  document.getElementById(`block-${idx}`)?.querySelectorAll('[data-preset]').forEach(btn => {
+    const [ps, pe] = btn.dataset.preset.split(',');
+    btn.classList.toggle('active', ps === start && pe === end);
+  });
+}
+
+function onTimeInput(idx) {
+  if (!slotAssignments[idx]) return;
+  const start = document.getElementById(`ts-${idx}`)?.value || '08:00';
+  const end   = document.getElementById(`te-${idx}`)?.value || '14:00';
+  slotAssignments[idx].timeStart = start;
+  slotAssignments[idx].timeEnd   = end;
+  document.getElementById(`block-${idx}`)?.querySelectorAll('[data-preset]').forEach(btn => {
+    const [ps, pe] = btn.dataset.preset.split(',');
+    btn.classList.toggle('active', ps === start && pe === end);
+  });
+}
+
+function addSecondAssignment() {
+  if (slotAssignments.filter(a => !a.support).length >= 2) return;
+  const supportIdx = slotAssignments.findIndex(a => a.support);
+  const newSlot = { doctorId: null, timeStart: '14:00', timeEnd: '18:00' };
+  if (supportIdx >= 0) slotAssignments.splice(supportIdx, 0, newSlot);
+  else slotAssignments.push(newSlot);
+  renderAssignmentBlocks();
+}
+
+function addSupportAssignment() {
+  if (slotAssignments.some(a => a.support)) return;
+  slotAssignments.push({ doctorId: null, timeStart: null, timeEnd: null, support: true });
+  renderAssignmentBlocks();
+}
+
+function removeAssignment(idx) {
+  slotAssignments.splice(idx, 1);
+  renderAssignmentBlocks();
+}
+
+function saveAssign() {
+  if (!aCtx) return;
+  const { dayIdx, slot } = aCtx;
+  const existing = getSlot(dayIdx, slot);
+
+  // Remove old stats
+  if (existing?.assignments) {
+    existing.assignments.forEach(a => {
+      if (a.doctorId) decStat(a.doctorId, slot, existing.salaTypeId);
+    });
+  }
+
+  const valid = slotAssignments.filter(a => a.doctorId);
+  const newData = {
+    salaTypeId:  slot === 'p' ? null : (selSalaId || null),
+    assignments: valid
+  };
+  setSlot(dayIdx, slot, (valid.length > 0 || newData.salaTypeId) ? newData : null);
+
+  // Add new stats
+  valid.forEach(a => incStat(a.doctorId, slot, newData.salaTypeId));
+
+  save(); render(); closeModal('ovAssign');
+  toast('Assegnazione salvata');
+}
+
+function clearSlot() {
+  if (!aCtx) return;
+  const { dayIdx, slot } = aCtx;
+  const existing = getSlot(dayIdx, slot);
+  if (existing?.assignments) {
+    existing.assignments.forEach(a => {
+      if (a.doctorId) decStat(a.doctorId, slot, existing.salaTypeId);
+    });
+  }
+  setSlot(dayIdx, slot, null);
+  save(); render(); closeModal('ovAssign');
+  toast('Slot rimosso');
+}
+
+/* ══════════════════════════════════════════
+   ROOM TYPES MODAL
+══════════════════════════════════════════ */
+function openRoomsModal() {
+  editingRoomId = null;
+  selColor = COLORS[0];
+  renderColorRow('roomColorRow', selColor);
+  renderRoomList();
+  syncRoomFormMode();
+  openModal('ovRooms');
+  document.getElementById('newRoomName').focus();
+}
+
+function syncRoomFormMode() {
+  const isEdit = editingRoomId !== null;
+  const btn  = document.getElementById('roomAddBtn');
+  const bar  = document.getElementById('roomEditBar');
+  const nameEl = document.getElementById('roomEditName');
+  btn.textContent = isEdit ? 'Aggiorna tipo sala' : '+ Aggiungi tipo sala';
+  btn.className = `btn btn-block ${isEdit ? 'btn-warning' : 'btn-primary'}`;
+  bar.style.display = isEdit ? '' : 'none';
+  if (isEdit) {
+    const st = S.saleTypes.find(x => x.id === editingRoomId);
+    if (st && nameEl) nameEl.textContent = st.name;
+  }
+}
+
+function editRoom(id) {
+  const st = S.saleTypes.find(x => x.id === id);
+  if (!st) return;
+  editingRoomId = id;
+  document.getElementById('newRoomName').value = st.name;
+  selColor = st.color;
+  renderColorRow('roomColorRow', selColor);
+  syncRoomFormMode();
+  document.getElementById('newRoomName').focus();
+  // Scroll form into view
+  document.getElementById('newRoomName').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelEditRoom() {
+  editingRoomId = null;
+  document.getElementById('newRoomName').value = '';
+  selColor = COLORS[0];
+  renderColorRow('roomColorRow', selColor);
+  syncRoomFormMode();
+}
+
+function renderColorRow(rowId, current) {
+  const el = document.getElementById(rowId);
+  el.innerHTML = COLORS.map(c =>
+    `<div class="swatch${c===current?' sel':''}" style="background:${c}"
+      onclick="pickColor('${c}','${rowId}')"></div>`
+  ).join('');
+}
+
+function pickColor(c, rowId) {
+  if (rowId === 'stColorRow') {
+    selShiftColor = c;
+    renderColorRow(rowId, selShiftColor);
+  } else {
+    selColor = c;
+    renderColorRow(rowId, selColor);
+  }
+}
+
+function addRoom() {
+  const name = document.getElementById('newRoomName').value.trim();
+  if (!name) { toast('Inserisci il nome del tipo sala'); return; }
+
+  if (editingRoomId) {
+    const st = S.saleTypes.find(x => x.id === editingRoomId);
+    if (st) { st.name = name; st.color = selColor; }
+    editingRoomId = null;
+    toast(`"${name}" aggiornato`);
+  } else {
+    S.saleTypes.push({ id: uid(), name, color: selColor });
+    toast(`"${name}" aggiunto`);
+  }
+
+  document.getElementById('newRoomName').value = '';
+  selColor = COLORS[0];
+  renderColorRow('roomColorRow', selColor);
+  syncRoomFormMode();
+  save(); renderRoomList(); render();
+}
+
+function renderRoomList() {
+  const el = document.getElementById('roomList');
+  if (!S.saleTypes.length) { el.innerHTML = '<div class="empty-state">Nessun tipo sala ancora</div>'; return; }
+  el.innerHTML = S.saleTypes.map(st => `
+    <div class="li">
+      <div class="dot-lg" style="background:${st.color}"></div>
+      <span class="li-name">${st.name}</span>
+      <div class="li-actions">
+        <button class="btn btn-secondary btn-xs" onclick="editRoom('${st.id}')">Modifica</button>
+        <button class="btn btn-danger btn-xs" onclick="delRoom('${st.id}')">Elimina</button>
+      </div>
+    </div>`).join('');
+}
+
+function delRoom(id) {
+  const st = S.saleTypes.find(x=>x.id===id);
+  if (!st || !confirm(`Eliminare il tipo "${st.name}"?`)) return;
+  S.saleTypes = S.saleTypes.filter(x=>x.id!==id);
+  // Nullify references in schedule
+  Object.values(S.schedule).forEach(w =>
+    Object.values(w).forEach(day =>
+      Object.values(day).forEach(slot => { if (slot.salaTypeId===id) slot.salaTypeId=null; })
+    )
+  );
+  save(); renderRoomList(); render();
+  toast('Tipo sala eliminato');
+}
+
+/* ══════════════════════════════════════════
+   DOCTORS MODAL
+══════════════════════════════════════════ */
+function openDoctorsModal() {
+  document.getElementById('docMgmtSearch').value = '';
+  renderDocList();
+  openModal('ovDocs');
+  document.getElementById('newDocName').focus();
+}
+
+function addDoc() {
+  const name = document.getElementById('newDocName').value.trim();
+  if (!name) { toast('Inserisci il nome del dottore'); return; }
+  if (S.doctors.some(d=>d.name.toLowerCase()===name.toLowerCase())) { toast('Dottore già presente'); return; }
+  S.doctors.push({ id: uid(), name });
+  document.getElementById('newDocName').value = '';
+  save(); renderDocList();
+  toast(`${name} aggiunto`);
+}
+
+function renderDocList() {
+  const el = document.getElementById('docMgmtList');
+  const q = (document.getElementById('docMgmtSearch')?.value || '').toLowerCase();
+  let docs = S.doctors.filter(d => d.name.toLowerCase().includes(q));
+  docs.sort((a,b) => a.name.localeCompare(b.name, 'it'));
+
+  if (!docs.length) { el.innerHTML = '<div class="empty-state">Nessun dottore trovato</div>'; return; }
+  el.innerHTML = docs.map(d => {
+    const t = docTotals(d.id);
+    const specCls = d.spec ? 'btn-xs' : 'btn-xs btn-ghost';
+    const specStyle = d.spec
+      ? 'background:#7c3aed;color:#fff;border-color:#7c3aed'
+      : 'color:#7c3aed;border:1px solid #c4b5fd';
+    return `<div class="li">
+      <span class="li-name">${d.name}</span>
+      <span class="li-meta">${t.tot} turni (M:${t.am} P:${t.pm})</span>
+      <div class="li-actions">
+        <button class="${specCls}" style="${specStyle}" onclick="toggleDocSpec('${d.id}')" title="Dottore specialista/supporto">Spec.</button>
+        <button class="btn btn-danger btn-xs" onclick="delDoc('${d.id}')">Elimina</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDocSpec(id) {
+  const doc = S.doctors.find(x => x.id === id);
+  if (!doc) return;
+  doc.spec = !doc.spec;
+  save(); renderDocList();
+}
+
+function delDoc(id) {
+  const doc = S.doctors.find(x=>x.id===id);
+  if (!doc || !confirm(`Eliminare "${doc.name}"? Verrà rimosso da tutti i turni.`)) return;
+  S.doctors = S.doctors.filter(x=>x.id!==id);
+  delete S.stats[id];
+  Object.values(S.schedule).forEach(w =>
+    Object.values(w).forEach(day =>
+      Object.values(day).forEach(slot => {
+        if (slot.assignments) {
+          slot.assignments = slot.assignments.filter(a => a.doctorId !== id);
+        } else if (slot.doctorId === id) {
+          slot.doctorId = null;
+        }
+      })
+    )
+  );
+  save(); renderDocList(); render();
+  toast('Dottore eliminato');
+}
+
+/* ══════════════════════════════════════════
+   STATISTICS MODAL
+══════════════════════════════════════════ */
+function openStatsModal() {
+  renderStats();
+  openModal('ovStats');
+}
+
+function renderStats() {
+  const view = document.getElementById('statsFilter').value;
+  const el = document.getElementById('statsContent');
+
+  if (!S.doctors.length) {
+    el.innerHTML = '<div class="empty-state">Nessun dottore registrato</div>';
+    return;
+  }
+
+  // Build bar definitions: one per room type + one for pomeriggio
+  const typeBars = S.saleTypes.map(st => ({ id: st.id, label: st.name, color: st.color, isPM: false }));
+  const pmBar    = { id: 'p', label: 'Pomeriggio', color: '#7c3aed', isPM: true };
+
+  const visibleBars = view === 'am' ? typeBars :
+                      view === 'pm' ? [pmBar]   :
+                      [...typeBars, pmBar];
+
+  const rows = S.doctors.map(d => {
+    const am = morningTotal(d.id);
+    const pm = S.stats[d.id]?.['p'] || 0;
+    const disp = view === 'am' ? am : view === 'pm' ? pm : am + pm;
+    return { d, am, pm, disp };
+  });
+
+  rows.sort((a,b) => b.disp - a.disp);
+
+  const globalMax = Math.max(
+    ...rows.flatMap(({ d }) => visibleBars.map(b => getStat(d.id, b.id))),
+    1
+  );
+
+  el.innerHTML = rows.map(({ d, disp }) => {
+    const barsHtml = visibleBars.map(b => {
+      const cnt = getStat(d.id, b.id);
+      const h = cnt === 0 ? 3 : Math.max(10, Math.round((cnt / globalMax) * 48));
+      return `<div class="bar-wrap" title="${b.label}: ${cnt} turni">
+        <div class="bar" style="background:${b.color};height:${h}px;opacity:${cnt===0?0.2:1}">${cnt > 0 ? cnt : ''}</div>
+        <div class="bar-lbl">${b.label.slice(0,5)}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="stats-row-item">
+      <div class="stats-name">${d.name}</div>
+      <div class="slot-bars" style="flex-wrap:wrap;gap:4px 5px">${barsHtml}</div>
+      <div class="stats-total-wrap">
+        <div class="stats-total-num">${disp}</div>
+        <div class="stats-total-lbl">turni</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   EXPORT
+══════════════════════════════════════════ */
+function exportPDF() {
+  const prev = document.title;
+  document.title = `Orario Sale Operatorie – ${weekLabel()}`;
+  window.print();
+  document.title = prev;
+}
+
+function exportJPG() {
+  const btn = document.getElementById('btnJpg');
+  if (typeof html2canvas === 'undefined') {
+    toast('Libreria non ancora caricata, riprova tra un secondo');
+    return;
+  }
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  const hints = document.querySelectorAll('.cell-hint');
+  hints.forEach(h => h.style.visibility = 'hidden');
+
+  const el = document.querySelector('.sched-card');
+  html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    // Capture full element even if partially off-screen
+    scrollX: 0, scrollY: -window.scrollY
+  }).then(canvas => {
+    hints.forEach(h => h.style.visibility = '');
+    const link = document.createElement('a');
+    link.download = `orario_${weekKey()}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.93);
+    link.click();
+    btn.textContent = 'JPG';
+    btn.disabled = false;
+    toast('Immagine scaricata');
+  }).catch(() => {
+    hints.forEach(h => h.style.visibility = '');
+    btn.textContent = 'JPG';
+    btn.disabled = false;
+    toast('Errore durante l\'esportazione');
+  });
+}
+
+/* ══════════════════════════════════════════
+   VIEW SWITCHING
+══════════════════════════════════════════ */
+function switchView(v) {
+  currentView = v;
+  document.getElementById('viewSale').style.display    = v === 'sale'    ? '' : 'none';
+  document.getElementById('viewMensile').style.display = v === 'mensile' ? '' : 'none';
+  document.getElementById('hdrSale').style.display     = v === 'sale'    ? 'flex' : 'none';
+  document.getElementById('hdrMensile').style.display  = v === 'mensile' ? 'flex' : 'none';
+  document.getElementById('tabSale').classList.toggle('active',    v === 'sale');
+  document.getElementById('tabMensile').classList.toggle('active', v === 'mensile');
+  if (v === 'mensile') renderMonthly();
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — NAVIGAZIONE
+══════════════════════════════════════════ */
+const MONTHS_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                   'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const DAYS_SHORT = ['D','L','M','M','G','V','S'];
+
+function monthKey()   { return curMonth.toISOString().slice(0,7); }
+function monthLabel() { return `${MONTHS_IT[curMonth.getMonth()]} ${curMonth.getFullYear()}`; }
+function prevMonth()  { curMonth.setMonth(curMonth.getMonth()-1); renderMonthly(); }
+function nextMonth()  { curMonth.setMonth(curMonth.getMonth()+1); renderMonthly(); }
+
+function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+
+function getMonthSlot(doctorId, day) {
+  return S.monthlySchedule?.[monthKey()]?.[doctorId]?.[day] ?? null;
+}
+function setMonthSlot(doctorId, day, data) {
+  const mk = monthKey();
+  if (!S.monthlySchedule[mk]) S.monthlySchedule[mk] = {};
+  if (!S.monthlySchedule[mk][doctorId]) S.monthlySchedule[mk][doctorId] = {};
+  if (data === null) delete S.monthlySchedule[mk][doctorId][day];
+  else S.monthlySchedule[mk][doctorId][day] = data;
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — GRIGLIA
+══════════════════════════════════════════ */
+function renderMonthly() {
+  document.getElementById('monthLabel').textContent = monthLabel();
+  const wrap = document.getElementById('monthlyGridWrap');
+  const year  = curMonth.getFullYear();
+  const month = curMonth.getMonth();
+  const days  = daysInMonth(year, month);
+  const mk    = monthKey();
+
+  if (!S.doctors.length) {
+    wrap.innerHTML = '<div class="empty-state" style="padding:40px">Nessun dottore in anagrafica.<br>Aggiungili dalla sezione Sale Operatorie.</div>';
+    return;
+  }
+
+  const holidays = italianHolidays(year);
+  const isHoliday = d => holidays.some(h => h.getMonth() === month && h.getDate() === d);
+
+  let html = '<table class="monthly-table"><thead><tr>';
+  html += '<th class="doc-col">Dottore</th>';
+  for (let d = 1; d <= days; d++) {
+    const dow  = new Date(year, month, d).getDay();
+    const isWE = dow === 0;
+    const isHol = isHoliday(d);
+    const cls  = isWE ? 'weekend' : isHol ? 'holiday' : '';
+    html += `<th class="${cls}">${d}<br><span style="font-weight:400;opacity:.7">${DAYS_SHORT[dow]}</span></th>`;
+  }
+  html += '<th style="background:#f0fdf4;min-width:64px">Totale</th></tr></thead><tbody>';
+
+  S.doctors.forEach(doc => {
+    html += `<tr><td class="doc-col" onclick="openDoctorMonth('${doc.id}')" title="Visualizza mese completo">${doc.name}</td>`;
+    let totShifts = 0, totRS = 0, totRT = 0;
+
+    for (let d = 1; d <= days; d++) {
+      const slot = getMonthSlotRaw(mk, doc.id, d);
+      const st   = slot?.shiftTypeId ? S.shiftTypes.find(t => t.id === slot.shiftTypeId) : null;
+      if (st)          totShifts += st.weight;
+      if (slot?.repSala)      totRS++;
+      if (slot?.repTrasporti) totRT++;
+
+      const dow    = new Date(year, month, d).getDay();
+      const isWE   = dow === 0;
+      const isHol  = isHoliday(d);
+      const abbr   = st ? (st.sigla || st.name.slice(0,2).toUpperCase()) : '';
+      const cellBg = st ? lighten(st.color, 0.78) : isHol ? '#fef9c3' : '';
+      const fg     = st ? st.color : '';
+      const cls    = isWE ? 'weekend' : isHol ? 'holiday' : '';
+
+      html += `<td class="${cls}" style="${cellBg ? `background:${cellBg}` : ''}">
+        <div class="shift-cell" onclick="openCellAssign('${doc.id}',${d},this,event)">
+          ${st ? `<span class="shift-abbr" style="color:${fg}">${abbr}</span>` : ''}
+          ${(slot?.repSala || slot?.repTrasporti) ? `<div class="rep-row">
+            ${slot.repSala      ? '<span class="rep-dot rep-sala">RS</span>'  : ''}
+            ${slot.repTrasporti ? '<span class="rep-dot rep-trasp">RT</span>' : ''}
+          </div>` : ''}
+        </div>
+      </td>`;
+    }
+
+    html += `<td class="tot-cell">
+      <div style="font-size:14px;font-weight:800;color:#16a34a">${totShifts}</div>
+      <div style="font-size:9px;color:#64748b">RS:${totRS} RT:${totRT}</div>
+    </td></tr>`;
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function getMonthSlotRaw(mk, doctorId, day) {
+  return S.monthlySchedule?.[mk]?.[doctorId]?.[day] ?? null;
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — CELL POPOVER
+══════════════════════════════════════════ */
+function openCellAssign(doctorId, day, triggerEl, evt) {
+  if (evt) evt.stopPropagation();
+  cellAssignCtx = { doctorId, day };
+  const doc  = S.doctors.find(d => d.id === doctorId);
+  const slot = getMonthSlot(doctorId, day);
+  const date = new Date(curMonth.getFullYear(), curMonth.getMonth(), day);
+
+  document.getElementById('cpTitle').textContent = doc?.name || '';
+  document.getElementById('cpSub').textContent =
+    `${['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][date.getDay()]} ${day} ${MONTHS_IT[curMonth.getMonth()]}`;
+
+  selShiftTypeId = slot?.shiftTypeId || null;
+  renderCellPopoverShifts();
+  updateCellRepButtons();
+
+  // Posizionamento
+  const pop  = document.getElementById('cellPopover');
+  pop.classList.add('open');
+  const src  = triggerEl ? triggerEl.getBoundingClientRect()
+                         : { left: window.innerWidth/2 - 125, bottom: 100, top: 100, right: window.innerWidth/2 + 125 };
+  const pw = 250, ph = 180;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = src.left;
+  let top  = src.bottom + 6;
+  if (left + pw > vw - 8) left = src.right - pw;
+  if (top  + ph > vh - 8) top  = src.top - ph - 6;
+  left = Math.max(8, left);
+  top  = Math.max(8, top);
+  pop.style.left = left + 'px';
+  pop.style.top  = top  + 'px';
+}
+
+function renderCellPopoverShifts() {
+  const g = document.getElementById('cpShifts');
+  let html = `<button class="cp-shift-none${!selShiftTypeId ? ' sel' : ''}" onclick="selCellShift(null)" title="Nessun turno">—</button>`;
+  html += S.shiftTypes.map(st => {
+    const isSel  = selShiftTypeId === st.id;
+    const sigla  = st.sigla || st.name.slice(0,2).toUpperCase();
+    const bg     = lighten(st.color, isSel ? 0.65 : 0.84);
+    return `<button class="cp-shift-pill${isSel ? ' sel' : ''}"
+              style="background:${bg};color:${st.color}"
+              title="${st.name}"
+              onclick="selCellShift('${st.id}')">${sigla}</button>`;
+  }).join('');
+  g.innerHTML = html;
+}
+
+function updateCellRepButtons() {
+  const slot = cellAssignCtx ? getMonthSlot(cellAssignCtx.doctorId, cellAssignCtx.day) : null;
+  document.getElementById('cpRepSala').className  = `cp-rep-btn${slot?.repSala      ? ' on-sala'  : ''}`;
+  document.getElementById('cpRepTrasp').className = `cp-rep-btn${slot?.repTrasporti ? ' on-trasp' : ''}`;
+}
+
+function selCellShift(id) {
+  if (!cellAssignCtx) return;
+  selShiftTypeId = id;
+  const slot = getMonthSlot(cellAssignCtx.doctorId, cellAssignCtx.day) || {};
+  const data = (id || slot.repSala || slot.repTrasporti)
+    ? { shiftTypeId: id, repSala: !!slot.repSala, repTrasporti: !!slot.repTrasporti }
+    : null;
+  setMonthSlot(cellAssignCtx.doctorId, cellAssignCtx.day, data);
+  save(); renderMonthly();
+  renderCellPopoverShifts();
+}
+
+function toggleCellRep(type) {
+  if (!cellAssignCtx) return;
+  const slot = getMonthSlot(cellAssignCtx.doctorId, cellAssignCtx.day) || {};
+  if (type === 'sala')  slot.repSala      = !slot.repSala;
+  if (type === 'trasp') slot.repTrasporti = !slot.repTrasporti;
+  const hasData = slot.shiftTypeId || slot.repSala || slot.repTrasporti;
+  setMonthSlot(cellAssignCtx.doctorId, cellAssignCtx.day, hasData ? slot : null);
+  save(); renderMonthly();
+  updateCellRepButtons();
+}
+
+function closeCellPopover() {
+  document.getElementById('cellPopover').classList.remove('open');
+  cellAssignCtx = null;
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — VISTA DOTTORE/MESE
+══════════════════════════════════════════ */
+function openDoctorMonth(doctorId) {
+  const doc   = S.doctors.find(d => d.id === doctorId);
+  const year  = curMonth.getFullYear();
+  const month = curMonth.getMonth();
+  const days  = daysInMonth(year, month);
+  const mk    = monthKey();
+
+  document.getElementById('docMonthTitle').textContent = doc?.name || '';
+  document.getElementById('docMonthSub').textContent   = `${MONTHS_IT[month]} ${year}`;
+
+  let html = '';
+  for (let d = 1; d <= days; d++) {
+    const date  = new Date(year, month, d);
+    const dow   = date.getDay();
+    const isWE  = dow === 0 || dow === 6;
+    const slot  = getMonthSlotRaw(mk, doctorId, d);
+
+    const shiftOpts = S.shiftTypes.map(st => {
+      const isSel = slot?.shiftTypeId === st.id;
+      const bg    = isSel ? lighten(st.color, 0.7) : '';
+      const style = isSel ? `background:${bg};color:${st.color};border-color:${st.color};font-weight:800` : '';
+      return `<span class="shift-type-opt${isSel?' sel':''}" style="${style};padding:3px 10px;font-size:11px"
+               onclick="setDocDayShift('${doctorId}',${d},'${st.id}',this)">${st.name}</span>`;
+    }).join('');
+
+    const rsOn  = slot?.repSala      ? 'on-sala'  : '';
+    const rtOn  = slot?.repTrasporti ? 'on-trasp' : '';
+    const noSt  = !slot?.shiftTypeId;
+    const noneStyle = noSt ? 'border-color:#64748b;color:#64748b' : '';
+
+    html += `<div class="doc-day-row">
+      <div class="doc-day-label${isWE ? ' weekend' : ''}">
+        <strong>${d}</strong><br><span style="font-size:10px">${['D','L','M','M','G','V','S'][dow]}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+        <span class="shift-type-opt none-opt${noSt?' sel':''}" style="padding:3px 10px;font-size:11px;${noneStyle}"
+          onclick="setDocDayShift('${doctorId}',${d},null,this)">—</span>
+        ${shiftOpts}
+      </div>
+      <button class="rep-toggle ${rsOn}" onclick="toggleDocDayRep('${doctorId}',${d},'sala',this)">RS</button>
+      <button class="rep-toggle ${rtOn}" onclick="toggleDocDayRep('${doctorId}',${d},'trasp',this)">RT</button>
+    </div>`;
+  }
+
+  document.getElementById('docMonthContent').innerHTML = html;
+  openModal('ovDoctorMonth');
+}
+
+function setDocDayShift(doctorId, day, shiftTypeId, el) {
+  const slot = getMonthSlot(doctorId, day) || {};
+  const data = (shiftTypeId || slot.repSala || slot.repTrasporti)
+    ? { ...slot, shiftTypeId: shiftTypeId || null }
+    : null;
+  setMonthSlot(doctorId, day, data);
+  save();
+  // update buttons in row
+  const row  = el.closest('.doc-day-row');
+  row.querySelectorAll('.shift-type-opt').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  renderMonthly();
+}
+
+function toggleDocDayRep(doctorId, day, type, btn) {
+  const slot = getMonthSlot(doctorId, day) || {};
+  if (type === 'sala')  slot.repSala      = !slot.repSala;
+  if (type === 'trasp') slot.repTrasporti = !slot.repTrasporti;
+  const hasData = slot.shiftTypeId || slot.repSala || slot.repTrasporti;
+  setMonthSlot(doctorId, day, hasData ? slot : null);
+  save();
+  if (type === 'sala')  btn.className = `rep-toggle ${slot.repSala      ? 'on-sala'  : ''}`;
+  if (type === 'trasp') btn.className = `rep-toggle ${slot.repTrasporti ? 'on-trasp' : ''}`;
+  renderMonthly();
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — TIPI TURNO
+══════════════════════════════════════════ */
+function openShiftTypesModal() {
+  editingShiftTypeId = null;
+  selShiftColor = COLORS[0];
+  renderColorRow('stColorRow', selShiftColor);
+  renderShiftTypeList();
+  syncShiftFormMode();
+  openModal('ovShiftTypes');
+  document.getElementById('stName').focus();
+}
+
+function syncShiftFormMode() {
+  const isEdit = editingShiftTypeId !== null;
+  const btn    = document.getElementById('stAddBtn');
+  const bar    = document.getElementById('stEditBar');
+  btn.textContent = isEdit ? 'Aggiorna tipo turno' : '+ Aggiungi tipo turno';
+  btn.className   = `btn btn-block ${isEdit ? 'btn-warning' : 'btn-primary'}`;
+  bar.style.display = isEdit ? '' : 'none';
+  if (isEdit) {
+    const st = S.shiftTypes.find(x => x.id === editingShiftTypeId);
+    if (st) document.getElementById('stEditName').textContent = st.name;
+  }
+}
+
+function editShiftType(id) {
+  const st = S.shiftTypes.find(x => x.id === id);
+  if (!st) return;
+  editingShiftTypeId = id;
+  document.getElementById('stName').value  = st.name;
+  document.getElementById('stSigla').value = st.sigla || '';
+  document.getElementById('stBlocks').checked = !!st.blocks;
+  document.querySelector(`input[name="stWeight"][value="${st.weight}"]`).checked = true;
+  document.querySelector(`input[name="stCoverage"][value="${st.coverage || 'full'}"]`).checked = true;
+  selShiftColor = st.color;
+  renderColorRow('stColorRow', selShiftColor);
+  syncShiftFormMode();
+  document.getElementById('stName').focus();
+  document.getElementById('stName').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEditShiftType() {
+  editingShiftTypeId = null;
+  document.getElementById('stName').value  = '';
+  document.getElementById('stSigla').value = '';
+  document.getElementById('stBlocks').checked = false;
+  document.getElementById('stW1').checked = true;
+  document.getElementById('stCovFull').checked = true;
+  selShiftColor = COLORS[0];
+  renderColorRow('stColorRow', selShiftColor);
+  syncShiftFormMode();
+}
+
+function renderShiftTypeList() {
+  const el = document.getElementById('stList');
+  if (!S.shiftTypes.length) { el.innerHTML = '<div class="empty-state">Nessun tipo turno. Aggiungine uno.</div>'; return; }
+  el.innerHTML = S.shiftTypes.map(st => {
+    const bg = lighten(st.color, 0.82);
+    return `<div class="li">
+      <span class="shift-abbr" style="background:${bg};color:${st.color}">${(st.sigla || st.name.slice(0,2).toUpperCase())}</span>
+      <span class="li-name">${st.name}</span>
+      <span class="li-meta">×${st.weight}${st.blocks ? ' · 🔒' : ''}${{ morning: ' · mat.', afternoon: ' · pom.', full: '' }[st.coverage || 'full']}</span>
+      <div class="li-actions">
+        <button class="btn btn-secondary btn-xs" onclick="editShiftType('${st.id}')">Modifica</button>
+        <button class="btn btn-danger btn-xs" onclick="delShiftType('${st.id}')">Elimina</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addShiftType() {
+  const name = document.getElementById('stName').value.trim();
+  if (!name) { toast('Inserisci il nome del turno'); return; }
+  const weight   = parseFloat(document.querySelector('input[name="stWeight"]:checked')?.value || '1');
+  const blocks   = document.getElementById('stBlocks').checked;
+  const coverage = document.querySelector('input[name="stCoverage"]:checked')?.value || 'full';
+
+  const sigla = document.getElementById('stSigla').value.trim().toUpperCase().slice(0, 3)
+                || name.slice(0, 2).toUpperCase();
+
+  if (editingShiftTypeId) {
+    const st = S.shiftTypes.find(x => x.id === editingShiftTypeId);
+    if (st) { st.name = name; st.sigla = sigla; st.weight = weight; st.color = selShiftColor; st.blocks = blocks; st.coverage = coverage; }
+    editingShiftTypeId = null;
+    toast(`"${name}" aggiornato`);
+  } else {
+    S.shiftTypes.push({ id: uid(), name, sigla, weight, color: selShiftColor, blocks, coverage });
+    toast(`Turno "${name}" aggiunto`);
+  }
+
+  document.getElementById('stName').value  = '';
+  document.getElementById('stSigla').value = '';
+  document.getElementById('stBlocks').checked = false;
+  document.getElementById('stW1').checked = true;
+  document.getElementById('stCovFull').checked = true;
+  selShiftColor = COLORS[0];
+  renderColorRow('stColorRow', selShiftColor);
+  syncShiftFormMode();
+  save(); renderShiftTypeList(); renderMonthly();
+}
+
+function delShiftType(id) {
+  const st = S.shiftTypes.find(x => x.id === id);
+  if (!st || !confirm(`Eliminare il turno "${st.name}"?`)) return;
+  S.shiftTypes = S.shiftTypes.filter(x => x.id !== id);
+  // rimuovi riferimenti dal calendario
+  Object.values(S.monthlySchedule).forEach(month =>
+    Object.values(month).forEach(doc =>
+      Object.values(doc).forEach(slot => { if (slot.shiftTypeId === id) slot.shiftTypeId = null; })
+    )
+  );
+  save(); renderShiftTypeList(); renderMonthly();
+  toast('Tipo turno eliminato');
+}
+
+/* ══════════════════════════════════════════
+   FESTIVITÀ ITALIANE
+══════════════════════════════════════════ */
+function calcEaster(year) {
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4, l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const mo = Math.floor((h+l-7*m+114)/31) - 1;
+  const dy = ((h+l-7*m+114) % 31) + 1;
+  return new Date(year, mo, dy);
+}
+
+function italianHolidays(year) {
+  const fixed = [[1,1],[1,6],[4,25],[5,1],[6,2],[8,15],[11,1],[12,8],[12,25],[12,26]];
+  const dates = fixed.map(([mo,dy]) => new Date(year, mo-1, dy));
+  const easter = calcEaster(year);
+  const pasquetta = new Date(easter); pasquetta.setDate(pasquetta.getDate()+1);
+  dates.push(pasquetta);
+  return dates;
+}
+
+function workingDaysInMonth(year, month) {
+  const days     = daysInMonth(year, month);
+  const holidays = italianHolidays(year);
+  let count = 0;
+  for (let d = 1; d <= days; d++) {
+    const date  = new Date(year, month, d);
+    const isSun = date.getDay() === 0;
+    const isHol = holidays.some(h => h.getFullYear()===year && h.getMonth()===month && h.getDate()===d);
+    if (!isSun && !isHol) count++;
+  }
+  return count;
+}
+
+/* ══════════════════════════════════════════
+   MENSILE — REPORT
+══════════════════════════════════════════ */
+function openMonthlyReport() {
+  document.getElementById('reportTitle').textContent = `Report — ${monthLabel()}`;
+  const mk    = monthKey();
+  const year  = curMonth.getFullYear();
+  const month = curMonth.getMonth();
+  const days  = daysInMonth(year, month);
+
+  if (!S.doctors.length) {
+    document.getElementById('reportContent').innerHTML = '<div class="empty-state">Nessun dottore.</div>';
+    openModal('ovMonthReport'); return;
+  }
+
+  const wDays = workingDaysInMonth(year, month);
+
+  const rows = S.doctors.map(doc => {
+    let totShifts = 0, totRS = 0, totRT = 0;
+    const byType = {};
+    for (let d = 1; d <= days; d++) {
+      const slot = getMonthSlotRaw(mk, doc.id, d);
+      const st   = slot?.shiftTypeId ? S.shiftTypes.find(t => t.id === slot.shiftTypeId) : null;
+      if (st) { totShifts += st.weight; byType[st.id] = (byType[st.id] || 0) + 1; }
+      if (slot?.repSala)      totRS++;
+      if (slot?.repTrasporti) totRT++;
+    }
+    const extra     = +(totShifts - wDays).toFixed(1);
+    const extraCol  = extra > 0 ? '#16a34a' : extra < 0 ? '#dc2626' : '#64748b';
+    const extraSign = extra > 0 ? '+' : '';
+    const typeBreak = S.shiftTypes.map(st => `<span style="font-size:11px;color:var(--muted)">${(st.sigla || st.name.slice(0,2).toUpperCase())}:${byType[st.id]||0}</span>`).join(' ');
+    return `<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px 12px;font-weight:600">${doc.name}</td>
+      <td style="padding:8px;text-align:center;font-size:16px;font-weight:800;color:#0f172a">${totShifts}</td>
+      <td style="padding:8px;text-align:center;font-weight:600;color:#64748b">${wDays}</td>
+      <td style="padding:8px;text-align:center;font-size:15px;font-weight:800;color:${extraCol}">${extraSign}${extra}</td>
+      <td style="padding:8px;text-align:center;font-weight:700;color:#b91c1c">${totRS}</td>
+      <td style="padding:8px;text-align:center;font-weight:700;color:#1e40af">${totRT}</td>
+      <td style="padding:8px 12px;font-size:11px">${typeBreak}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('reportContent').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      Giorni lavorativi del mese (escluse festività italiane): <strong>${wDays}</strong>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f8fafc;border-bottom:2px solid var(--border)">
+          <th style="padding:8px 12px;text-align:left">Dottore</th>
+          <th style="padding:8px;text-align:center">T. Totali</th>
+          <th style="padding:8px;text-align:center;color:#64748b">T. Mese</th>
+          <th style="padding:8px;text-align:center;color:#16a34a">T. Aggiuntivi</th>
+          <th style="padding:8px;text-align:center;color:#b91c1c">Rep. Sala</th>
+          <th style="padding:8px;text-align:center;color:#1e40af">Rep. Trasp.</th>
+          <th style="padding:8px 12px;text-align:left">Dettaglio</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  openModal('ovMonthReport');
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+(async () => {
+  if (IS_SERVER) {
+    // Controlla se già autenticato
+    try {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.ok) { showLoginOverlay(); return; }
+    } catch(e) { showLoginOverlay(); return; }
+    hideLoginOverlay();
+  }
+  const ok = await loadState();
+  if (ok) render();
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
