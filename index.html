@@ -852,9 +852,67 @@ body {
   .modal  { margin: 8px; width: calc(100vw - 16px) !important; max-width: none !important; }
   .login-card { padding: 28px 20px; }
 }
+
+/* ── ROTATE BUTTON (solo mobile) ── */
+.rotate-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 38px; height: 38px;
+  font-size: 20px; cursor: pointer;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--text);
+  transition: background .15s;
+}
+.rotate-btn:hover { background: var(--bg); }
+.rotate-btn.active { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+@media (max-width: 700px) { .rotate-btn { display: flex; } }
+
+/* ── FORCE LANDSCAPE (solo portrait mobile) ── */
+@media (max-width: 700px) and (orientation: portrait) {
+  #stage.force-landscape {
+    position: fixed;
+    width: 100vh;
+    height: 100vw;
+    top: calc(50vh - 50vw);
+    left: calc(50vw - 50vh);
+    transform: rotate(90deg);
+    transform-origin: center center;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #stage.force-landscape .main {
+    flex: 1; min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 6px !important;
+    display: flex; flex-direction: column;
+  }
+  #stage.force-landscape #viewSale { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #stage.force-landscape .sched-card {
+    flex: 1; min-height: 0; min-width: 0 !important;
+    display: flex; flex-direction: column;
+  }
+  #stage.force-landscape .sched-grid {
+    flex: 1; min-height: 0;
+    grid-template-columns: 48px repeat(5, 1fr) !important;
+    grid-template-rows: 40px 22px 1fr 1fr 1fr 1fr 1fr 22px 1fr !important;
+  }
+  #stage.force-landscape .col-hdr  { padding: 6px 4px !important; }
+  #stage.force-landscape .day-name { font-size: 12px !important; }
+  #stage.force-landscape .day-date { font-size: 10px !important; }
+  #stage.force-landscape .row-lbl  { padding: 4px 6px !important; font-size: 11px !important; }
+  #stage.force-landscape .cell     { min-height: 0 !important; padding: 4px 5px !important; }
+  #stage.force-landscape .badge    { font-size: 11px !important; padding: 2px 6px !important; }
+  #stage.force-landscape .cell-doc { font-size: 12px !important; }
+  #stage.force-landscape .cell-doc-row .cell-doc { font-size: 12px !important; }
+  #stage.force-landscape .sec-banner { padding: 3px 10px !important; font-size: 9px !important; }
+}
 </style>
 </head>
 <body>
+<div id="stage">
 
 <!-- ════════════════════ HEADER ════════════════════ -->
 <header class="app-header">
@@ -915,6 +973,7 @@ body {
   </div>
   <!-- hamburger solo mobile -->
   <button class="hamburger-btn no-print" onclick="toggleMobileMenu()" title="Menu">&#9776;</button>
+  <button class="rotate-btn no-print" id="rotateBtn" onclick="toggleLandscape()" title="Ruota schermata">&#x21BB;</button>
   <!-- navigazione week/mese mobile (terza riga) -->
   <div class="mob-weeknav no-print" id="mobWeekNav">
     <button class="nav-btn" id="mobPrev" onclick="">&#8592;</button>
@@ -983,6 +1042,7 @@ body {
     </div>
   </div>
 </main>
+</div><!-- #stage -->
 
 <!-- ════════════════════ MODAL: ASSIGN ════════════════════ -->
 <div class="overlay" id="ovAssign">
@@ -2814,6 +2874,29 @@ function openMonthlyReport() {
     </table>`;
   openModal('ovMonthReport');
 }
+
+/* ══════════════════════════════════════════
+   LANDSCAPE TOGGLE (mobile)
+══════════════════════════════════════════ */
+let isLandscapeForced = false;
+
+function toggleLandscape() {
+  isLandscapeForced = !isLandscapeForced;
+  document.getElementById('stage').classList.toggle('force-landscape', isLandscapeForced);
+  const btn = document.getElementById('rotateBtn');
+  btn.innerHTML = isLandscapeForced ? '&#x21BA;' : '&#x21BB;';
+  btn.classList.toggle('active', isLandscapeForced);
+}
+
+window.addEventListener('orientationchange', () => {
+  if (isLandscapeForced) {
+    isLandscapeForced = false;
+    document.getElementById('stage').classList.remove('force-landscape');
+    const btn = document.getElementById('rotateBtn');
+    btn.innerHTML = '&#x21BB;';
+    btn.classList.remove('active');
+  }
+});
 
 /* ══════════════════════════════════════════
    INIT
