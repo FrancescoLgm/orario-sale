@@ -920,7 +920,7 @@ body {
     <div class="brand-icon">&#129658;</div>
     <div>
       <div class="brand-title">Gestione Turni</div>
-      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-1</span></div>
+      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-2</span></div>
     </div>
   </div>
   <div class="sep"></div>
@@ -1888,22 +1888,8 @@ function isDoctorBlocked(doctorId, date) {
 
 function getUsedDoctorIds(excludeIdx) {
   const used = new Set();
-  // other blocks within the same slot being edited
+  // impedisce di selezionare lo stesso dottore due volte nello stesso slot
   slotAssignments.forEach((a, i) => { if (i !== excludeIdx && a.doctorId) used.add(a.doctorId); });
-  if (!aCtx) return used;
-  const { dayIdx, slot } = aCtx;
-  // il PM può usare dottori già assegnati la mattina
-  if (slot === 'p') return used;
-  const wk = S.schedule[weekKey()];
-  if (!wk) return used;
-  const dayData = wk[dayIdx];
-  if (!dayData) return used;
-  // other morning slots on the same day
-  ['m1','m2','m3','m4','m5'].forEach(sk => {
-    if (sk === slot) return;
-    const sl = dayData[sk];
-    (sl?.assignments || []).forEach(a => { if (a.doctorId) used.add(a.doctorId); });
-  });
   return used;
 }
 
@@ -1925,15 +1911,18 @@ function renderAssignDocList(idx) {
 
   const slotType = (aCtx?.slot === 'p') ? 'afternoon' : 'morning';
 
+  // Se almeno un dottore ha un turno assegnato per quel giorno, il filtro è attivo
+  const dayHasAnyShift = currentDate
+    ? S.doctors.some(doc => !!getDoctorDayShift(doc.id, currentDate))
+    : false;
+
   let docs = S.doctors.filter(d => {
     if (d.id !== curDoc && used.has(d.id)) return false;
     if (isSpec && !d.spec) return false;
     if (currentDate && d.id !== curDoc) {
-      const mk = `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}`;
-      const monthHasData = !!(S.monthlySchedule?.[mk] && Object.keys(S.monthlySchedule[mk]).length);
       const dayShift = getDoctorDayShift(d.id, currentDate);
-      // se il mese è compilato e il dottore non ha turno → non selezionabile
-      if (monthHasData && !dayShift) return false;
+      // se quel giorno ha turni assegnati e il dottore non ne ha uno → non selezionabile
+      if (dayHasAnyShift && !dayShift) return false;
       if (dayShift?.blocks) return false;
       if (dayShift) {
         const cov = dayShift.coverage || 'full';
