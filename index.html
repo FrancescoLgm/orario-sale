@@ -920,7 +920,7 @@ body {
     <div class="brand-icon">&#129658;</div>
     <div>
       <div class="brand-title">Gestione Turni</div>
-      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-3</span></div>
+      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-4</span></div>
     </div>
   </div>
   <div class="sep"></div>
@@ -1873,8 +1873,13 @@ function blockHtml(a, i, isPM) {
   </div>`;
 }
 
+function mkFromDate(date) {
+  // Stesso formato di monthKey(): toISOString del 1° del mese a mezzanotte locale
+  return new Date(date.getFullYear(), date.getMonth(), 1).toISOString().slice(0, 7);
+}
+
 function getDoctorDayShift(doctorId, date) {
-  const mk  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+  const mk  = mkFromDate(date);
   const day = date.getDate();
   const slot = S.monthlySchedule?.[mk]?.[doctorId]?.[day];
   if (!slot?.shiftTypeId) return null;
@@ -1913,7 +1918,7 @@ function renderAssignDocList(idx) {
 
   // Controlla direttamente se il dottore ha un turno assegnato in orario mensile per quel giorno
   function hasShiftOnDay(doctorId, date) {
-    const mk  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+    const mk  = mkFromDate(date);
     const day = date.getDate();
     return !!(S.monthlySchedule?.[mk]?.[doctorId]?.[day]?.shiftTypeId);
   }
