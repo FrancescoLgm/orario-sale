@@ -920,7 +920,7 @@ body {
     <div class="brand-icon">&#129658;</div>
     <div>
       <div class="brand-title">Gestione Turni</div>
-      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-2</span></div>
+      <div class="brand-sub">Ospedale &middot; <span style="opacity:.65">v2026.05.25-3</span></div>
     </div>
   </div>
   <div class="sep"></div>
@@ -1911,18 +1911,24 @@ function renderAssignDocList(idx) {
 
   const slotType = (aCtx?.slot === 'p') ? 'afternoon' : 'morning';
 
-  // Se almeno un dottore ha un turno assegnato per quel giorno, il filtro è attivo
-  const dayHasAnyShift = currentDate
-    ? S.doctors.some(doc => !!getDoctorDayShift(doc.id, currentDate))
-    : false;
+  // Controlla direttamente se il dottore ha un turno assegnato in orario mensile per quel giorno
+  function hasShiftOnDay(doctorId, date) {
+    const mk  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+    const day = date.getDate();
+    return !!(S.monthlySchedule?.[mk]?.[doctorId]?.[day]?.shiftTypeId);
+  }
+
+  // Il filtro si attiva solo se almeno un dottore ha un turno in quel giorno
+  const dayHasAnyShift = currentDate ? S.doctors.some(d => hasShiftOnDay(d.id, currentDate)) : false;
 
   let docs = S.doctors.filter(d => {
     if (d.id !== curDoc && used.has(d.id)) return false;
     if (isSpec && !d.spec) return false;
     if (currentDate && d.id !== curDoc) {
+      // regola principale: se il giorno ha turni, chi non ce l'ha non è selezionabile
+      if (dayHasAnyShift && !hasShiftOnDay(d.id, currentDate)) return false;
+      // controlli aggiuntivi sul tipo di turno (bloccante, fascia oraria)
       const dayShift = getDoctorDayShift(d.id, currentDate);
-      // se quel giorno ha turni assegnati e il dottore non ne ha uno → non selezionabile
-      if (dayHasAnyShift && !dayShift) return false;
       if (dayShift?.blocks) return false;
       if (dayShift) {
         const cov = dayShift.coverage || 'full';
